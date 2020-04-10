@@ -46,6 +46,7 @@ fileCreationErrorMsg db 10, 10, 13, "Error no se puede crear el archivo", "$"
 fseekErrorMsg db 10, 10, 13, "Error no se puede desplazar el puntero", "$"
 writeFileErrorMsg db 10, 10, 13, "Error no se puede escribir en archivo", "$"
 authenticationMsg db 10, 10, 13, "Error contrasena o usuario incorrecto", "$"
+equalUsersMsg db 10, 10, 13, "Error el usuario ya esta registrado", "$"
 
 ;--------------------------VARIABLES DE MANEJO DE ARCHIVOS
 handle dw ?
@@ -94,6 +95,11 @@ main proc
         print usernameMsg
         readChain 7, username
         CALL clearUsername
+        openFile userFileName 0h
+        lseek 00h 0000 0000
+        readFile 01CCh readTxt
+        closeFile
+        CALL checkRegistration
         print passwordMsg
         readChain 4, password
         CALL checkPassword
@@ -340,5 +346,51 @@ checkLogin proc near
         ADD si, 11
         JMP cyclicalWord
 checkLogin endp
+
+;----------------------------VERIFICAR NOMBRE DE USUARIO DE REGISTRO
+checkRegistration proc near
+    MOV bx, 0000
+    LEA si, readTxt
+    LEA di, usernameFromFile
+
+    meterCycle:
+        CMP bx, 1CCh
+        JAE userAvailable
+        MOV cx, 0007h
+        JMP usernameAssembly
+
+    userAvailable:
+        RET
+
+    usernameAssembly:
+        MOV al, [si]
+        MOV [di], al
+        INC di
+        INC si
+        INC bx
+        LOOP usernameAssembly
+        PUSH bx
+        PUSH si
+        PUSH ax
+        chainComparison 0007h username usernameFromFile
+        REPE CMPSB
+        JE duplicateUserError
+        POP ax
+        POP si
+        POP bx
+        ADD si, 16
+        ADD bx, 16
+        LEA di, usernameFromFile
+        JMP meterCycle 
+    
+    duplicateUserError:
+        POP ax
+        POP si
+        POP bx
+        print equalUsersMsg
+        print pressAKeyMsg
+        readCharacterWithoutPrinting
+        JMP mainMenu
+checkRegistration endp
 
 end main
