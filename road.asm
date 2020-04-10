@@ -27,7 +27,14 @@ menuUserOption1 db 10, 10, 13, "1) Iniciar Juego", "$"
 menuUserOption2 db 10, 13, "2) Cargar Juego", "$"
 menuUserOption3 db 10, 13, "3) Salir", 10, 13, "$"
 
-;--------------------------VARIABLES PARA VERIFICCION DE USUARIOS
+;-------------------------VARIABLES GENERALES
+top10PtsArray db 110 dup(" "), "$"
+usersAvailablePoints db 220 dup(" "), "$"
+
+tenthNumber db 0
+unitNumber db 0
+
+;--------------------------VARIABLES PARA VERIFICACION DE USUARIOS
 usernameMsg db 10, 10, 13, "Nombre de usuario: ", "$"
 passwordMsg db 10, 13, "Contrasena: ", "$"
 username db 7 dup(" "), "$"
@@ -150,6 +157,11 @@ main proc
         print menuAdminOption2
         print menuAdminOption3
         readOption
+        SUB al, 30h
+        CMP al, 01h
+        JE jumpTop10Points
+        CMP al, 02h
+        JE jumpTop10Times
         JMP mainMenu
     
     userMenu:
@@ -165,6 +177,23 @@ main proc
         print menuUserOption3
         readOption
         JMP mainMenu
+
+    jumpTop10Points:
+        print errorOpeningFileMsg 
+        JMP getTop10Points
+    
+    jumpTop10Times:
+        
+    getTop10Points:
+        openFile userFileName 0h
+        lseek 00h 0000 0000
+        readFile 01CCh readTxt
+        closeFile
+        putUsersArray
+        printCharacter 10
+        printCharacter 13
+        print usersAvailablePoints
+        JMP administrationMenu
     
     showFileError:
         print fileCreationErrorMsg

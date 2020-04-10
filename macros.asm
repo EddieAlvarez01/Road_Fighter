@@ -117,3 +117,58 @@ chainComparison macro length, chain1, chain2
     LEA di, chain2
 endm
 
+;-------METER USUSARIOS EN EL ARRAY
+putUsersArray macro
+    LOCAL newUserLine, comparisonThereUser, insertUser, finishFilling
+    LEA si, readTxt
+    LEA di, usersAvailablePoints
+    MOV bx, 0000h
+
+    newUserLine:
+        MOV cx, 0007h
+        CMP bx, 01CCh
+        JNAE comparisonThereUser
+        JMP finishFilling
+
+    comparisonThereUser: 
+        MOV al, [si]
+        CMP al, 20h
+        JNE insertUser
+        JMP finishFilling
+    
+    insertUser:
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC bx
+        INC di
+        LOOP insertUser
+        ADD si, 0006h
+        ADD bx, 0006h
+        MOV al, [si]
+        SUB al, 30h
+        MOV [di], al
+        INC si
+        INC bx
+        INC di
+        MOV al, [si]
+        SUB al, 30h
+        MOV [di], al
+        INC di
+        ADD si, 0002h
+        ADD bx, 0002h
+        MOV al, [si]
+        SUB al, 30h
+        MOV [di], al
+        INC di
+        INC si
+        INC bx
+        MOV al, [si]
+        SUB al, 30h
+        MOV [di], al
+        ADD si, 0006h
+        ADD bx, 0006h
+        JMP newUserLine
+
+    finishFilling:
+endm
