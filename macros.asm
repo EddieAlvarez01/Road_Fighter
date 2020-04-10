@@ -77,6 +77,15 @@ writeFile macro length, content
     noErrorWiteFile:
 endm
 
+;------------LEER DE ARCHIVO
+readFile macro length, savedChain 
+    MOV ah, 3Fh
+    MOV bx, handle
+    MOV cx, length
+    LEA dx, savedChain
+    INT 21h
+endm
+
 ;---------MOVER PUNTERO DE UN ARCHIVO LSEEK
 lseek macro displacement, moreIm, lessIm
     LOCAL noErrorFseek
@@ -97,5 +106,14 @@ closeFile macro
     MOV bx, handle
     MOV ah, 3Eh
     INT 21h
+endm
+
+;------COMPARACION DE CADENAS
+chainComparison macro length, chain1, chain2
+    MOV cx, length
+    MOV ax, ds
+    MOV es, ax
+    LEA si, chain1
+    LEA di, chain2
 endm
 

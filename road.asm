@@ -14,8 +14,8 @@ section db 10, 13, "SECCION: A", "$"
 
 ;--------------------------MENU ADMIN
 menuAdminOption1 db 10, 10, 13, "1) Top 10 puntos", "$"
-menuAdminOption2 db 10, 10, 13, "2) Top 10 tiempos", "$"
-menuAdminOption3 db 10, 10, 13, "3) Salir", "$"
+menuAdminOption2 db 10, 13, "2) Top 10 tiempos", "$"
+menuAdminOption3 db 10, 13, "3) Salir", 10, 13, "$"
 
 ;--------------------------MENU GENERAL
 option1 db 10, 10, 13, "1) Ingresar", "$"
@@ -25,13 +25,15 @@ option3 db 10, 13, "3) Salir", 10, 13, "$"
 ;--------------------------MENU USUARIO
 menuUserOption1 db 10, 10, 13, "1) Iniciar Juego", "$"
 menuUserOption2 db 10, 13, "2) Cargar Juego", "$"
-menuUserOption3 db 10, 13, "3) Salir", "$"
+menuUserOption3 db 10, 13, "3) Salir", 10, 13, "$"
 
 ;--------------------------VARIABLES PARA VERIFICCION DE USUARIOS
 usernameMsg db 10, 10, 13, "Nombre de usuario: ", "$"
 passwordMsg db 10, 13, "Contrasena: ", "$"
 username db 7 dup(" "), "$"
 password db 4 dup(" "), "$"
+defaultUser db "admin", "$"
+defaultPassword db "1234", "$"
 
 ;--------------------------MENSAJES DEL SISTEMA
 pressAKeyMsg db 10, 13, "Presiona una tecla para continuar....", "$"
@@ -43,6 +45,7 @@ errorOpeningFileMsg db 10, 10, 13, "Error al escribir el archivo", "$"
 fileCreationErrorMsg db 10, 10, 13, "Error no se puede crear el archivo", "$"
 fseekErrorMsg db 10, 10, 13, "Error no se puede desplazar el puntero", "$"
 writeFileErrorMsg db 10, 10, 13, "Error no se puede escribir en archivo", "$"
+authenticationMsg db 10, 10, 13, "Error contrasena o usuario incorrecto", "$"
 
 ;--------------------------VARIABLES DE MANEJO DE ARCHIVOS
 handle dw ?
@@ -52,6 +55,9 @@ defaultLevel db "00", "$"
 defaultScore db "00", "$"
 defaultTime db "000", "$"
 newLine db 10, "$" 
+readTxt db 460 dup(" "), "$"
+usernameFromFile db 7 dup(" "), "$"
+passwordFromFile db 4 dup(" "), "$" 
 
 
 .code
@@ -79,6 +85,7 @@ main proc
         INT 21h
     
     jumpIn:
+        JMP login
 
     skipRegistration:
         JMP register
@@ -106,6 +113,51 @@ main proc
         print registeredUserMsg
         print pressAKeyMsg
         readCharacterWithoutPrinting
+        JMP mainMenu
+
+    login:
+        print usernameMsg
+        readChain 0007, username
+        CALL clearUsername
+        print passwordMsg
+        readChain 0004, password
+        openFile userFileName 0h
+        lseek 00h 0000 0000
+        readFile 01CCh readTxt
+        closeFile
+        CALL checkLogin
+        CMP bl, 01h
+        JE administrationMenu
+        CMP bl, 02h
+        JE userMenu
+        JMP mainMenu
+    
+    administrationMenu:
+        print university
+        print faculty
+        print school
+        print course
+        print studentName
+        print card
+        print section
+        print menuAdminOption1
+        print menuAdminOption2
+        print menuAdminOption3
+        readOption
+        JMP mainMenu
+    
+    userMenu:
+        print university
+        print faculty
+        print school
+        print course
+        print studentName
+        print card
+        print section
+        print menuUserOption1
+        print menuUserOption2
+        print menuUserOption3
+        readOption
         JMP mainMenu
     
     showFileError:
@@ -164,7 +216,7 @@ clearUsername proc near
     MOV bl, 0
 
     loop1:
-        CMP bl, 6
+        CMP bl, 7
         JE exitClear
         MOV al, [si]
         CMP al, 10
@@ -209,5 +261,84 @@ chainLength proc near
         POP si
         RET
 chainLength endp
+
+;-------VERIFICACION DE USUARIO Y CONTRASEÑA
+checkLogin proc near
+    chainComparison 0005 defaultUser username
+    REPE CMPSB
+    JE userIdentifiedAdmin
+    JMP identificationProcess
+
+    userIdentifiedAdmin:
+        MOV bl, 01h
+        RET
+
+    identificationProcess:
+        MOV bx, 0000
+        LEA si, readTxt
+        LEA di, usernameFromFile
+
+    cyclicalWord:
+        CMP bx, 1CCh
+        JAE authenticationError
+        MOV cx, 0007h
+        JMP usernameCycle
+
+    authenticationError:
+        MOV bl, 00h
+        print authenticationMsg
+        print pressAKeyMsg
+        readCharacterWithoutPrinting
+        RET
+
+    usernameCycle:
+        MOV al, [si]
+        MOV [di], al
+        INC di
+        INC si
+        INC bx
+        LOOP usernameCycle
+        INC si 
+        INC bx
+        MOV cx, 4
+        LEA di, passwordFromFile
+    
+    passwordCycle:
+        MOV al, [si]
+        MOV [di], al
+        INC di
+        INC si
+        INC bx
+        LOOP passwordCycle
+        PUSH bx
+        PUSH si
+        PUSH ax
+        chainComparison 0007 username usernameFromFile
+        REPE CMPSB
+        JE comparePasswords
+        JMP trackComparisons
+    
+    comparePasswords:
+        chainComparison 0004 password passwordFromFile
+        REPE CMPSB
+        JE properlyLogged
+        JMP trackComparisons
+    
+    properlyLogged:
+        POP ax
+        POP si
+        POP bx
+        MOV bl, 02h
+        RET
+    
+    trackComparisons:
+        POP ax
+        POP si
+        POP bx
+        LEA di, usernameFromFile
+        ADD bx, 11
+        ADD si, 11
+        JMP cyclicalWord
+checkLogin endp
 
 end main
