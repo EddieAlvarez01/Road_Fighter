@@ -227,7 +227,7 @@ dottedOrder macro
     startCycleY:
         MOV al, scoreFromArray1
         CMP al, scoreFromArray2
-        JBE cycleIn
+        JAE cycleIn
         PUSH si
         LEA si, usernameFromArray
         MOV cx, 0007h
