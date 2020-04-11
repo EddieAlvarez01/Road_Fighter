@@ -30,6 +30,10 @@ menuUserOption3 db 10, 13, "3) Salir", 10, 13, "$"
 ;-------------------------VARIABLES GENERALES
 top10PtsArray db 110 dup(" "), "$"
 usersAvailablePoints db 220 dup(" "), "$"
+scoreFromArray1 db 00
+scoreFromArray2 db 00
+usernameFromArray db 7 dup(" "), "$"
+levelFromArray db 00
 
 tenthNumber db 0
 unitNumber db 0
@@ -65,8 +69,7 @@ defaultTime db "000", "$"
 newLine db 10, "$" 
 readTxt db 460 dup(" "), "$"
 usernameFromFile db 7 dup(" "), "$"
-passwordFromFile db 4 dup(" "), "$" 
-
+passwordFromFile db 4 dup(" "), "$"
 
 .code
 main proc
@@ -179,7 +182,6 @@ main proc
         JMP mainMenu
 
     jumpTop10Points:
-        print errorOpeningFileMsg 
         JMP getTop10Points
     
     jumpTop10Times:
@@ -190,6 +192,10 @@ main proc
         readFile 01CCh readTxt
         closeFile
         putUsersArray
+        printCharacter 10
+        printCharacter 13
+        print usersAvailablePoints
+        dottedOrder
         printCharacter 10
         printCharacter 13
         print usersAvailablePoints

@@ -168,7 +168,126 @@ putUsersArray macro
         MOV [di], al
         ADD si, 0006h
         ADD bx, 0006h
+        INC di
         JMP newUserLine
 
     finishFilling:
+endm
+
+;-----------------------ORDENAR ARRAY
+dottedOrder macro
+    LOCAL arrayPath, vacuumComparison, cycleIn, vacuumComparisonCycleIn, preStartCycleY, startCycleY, fillOutName, memoryExchange, memoryExchange2, increaseCycleOne, getOutBigPicture
+    MOV bl, 00h
+    MOV bh, 00h
+    LEA di, usersAvailablePoints
+    MOV si, di
+
+    arrayPath:
+        CMP bl, 14h
+        JNE vacuumComparison
+        JMP getOutBigPicture
+    
+    vacuumComparison:
+        MOV al, [di]
+        CMP al, 20h
+        JNE cycleIn
+        JMP getOutBigPicture
+    
+    cycleIn:
+        INC bh
+        ADD si, 000Bh
+        CMP bh, 14h
+        JNE vacuumComparisonCycleIn
+        JMP increaseCycleOne
+    
+    vacuumComparisonCycleIn:
+        MOV al, [si]
+        CMP al, 20h
+        JNE preStartCycleY
+        JMP increaseCycleOne 
+
+    preStartCycleY:
+        ADD si, 09h
+        MOV ah, [si]
+        INC si
+        MOV al, [si]
+        AAD
+        MOV scoreFromArray2, al
+        ADD di, 09h
+        MOV ah, [di]
+        INC di
+        MOV al, [di]
+        AAD
+        MOV scoreFromArray1, al
+        DEC si
+        DEC di
+        SUB si, 09h
+        SUB di, 09h
+    
+    startCycleY:
+        MOV al, scoreFromArray1
+        CMP al, scoreFromArray2
+        JBE cycleIn
+        PUSH si
+        LEA si, usernameFromArray
+        MOV cx, 0007h
+    
+    fillOutName:
+        MOV al, [di]
+        MOV [si], al
+        INC di
+        INC si
+        LOOP fillOutName
+        MOV ah, [di]
+        INC di
+        MOV al, [di]
+        AAD
+        MOV levelFromArray, al
+        SUB di, 0008h
+        MOV cx, 000Bh
+        POP si
+
+    memoryExchange:
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        LOOP memoryExchange
+        SUB di, 000Bh
+        SUB si, 000Bh
+        PUSH di
+        LEA di, usernameFromArray
+        MOV cx, 0007h
+
+    memoryExchange2:
+        MOV al, [di]
+        MOV [si], al
+        INC di
+        INC si
+        LOOP memoryExchange2
+        MOV al, levelFromArray
+        AAM
+        MOV [si], ah
+        INC si
+        MOV [si], al
+        MOV al, scoreFromArray1
+        AAM
+        INC si
+        MOV [si], ah
+        INC si
+        MOV [si], al
+        INC si
+        POP di
+        SUB si, 000Bh
+        JMP cycleIn
+
+
+    increaseCycleOne:
+        INC bl
+        ADD di, 000Bh
+        MOV si, di
+        MOV bh, bl
+        JMP arrayPath
+    
+    getOutBigPicture:
 endm
