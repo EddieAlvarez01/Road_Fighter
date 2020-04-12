@@ -35,7 +35,7 @@ endm
 
 ;---------CREAR UN ARCHIVO DE REPORTE
 createFile macro fileName
-    ;LOCAL noFileErro
+    LOCAL noFileErro
     MOV ah, 3Ch
     MOV cx, 0
     LEA dx, fileName
@@ -290,4 +290,147 @@ dottedOrder macro
         JMP arrayPath
     
     getOutBigPicture:
+endm
+
+;-------------------------IMPRESIÓN DE TOP 10
+top10Printing macro
+    LOCAL checkCount, checkVoidArray, printTour, print10, printUsernameTop, comeOutPrint
+    MOV bl, 00h
+    LEA si, usersAvailablePoints
+
+    checkCount:
+        CMP bl, 0Ah
+        JNE checkVoidArray
+        JMP comeOutPrint
+
+    checkVoidArray:
+        MOV al, [si]
+        CMP al, 20h
+        JNE printTour
+        JMP comeOutPrint
+    
+    printTour:
+        LEA di, usernameFromArray
+        printCharacter 0Ah
+        printCharacter 0Dh
+        PUSH bx
+        writeFile 0001h newLine
+        POP bx
+        ADD bl, 01h
+        CMP bl, 0Ah
+        JE print10
+        ADD bl, 30h
+        MOV numberForWrite, bl
+        printCharacter bl
+        PUSH bx
+        writeFile 0001h numberForWrite
+        POP bx
+        printCharacter 2Eh
+        PUSH bx
+        writeFile 0001h point
+        POP bx
+        SUB bl, 30h
+        DEC bl
+        print spaceBetweenNumberUser
+        PUSH bx
+        LEA bx, spaceBetweenNumberUser
+        CALL chainLength
+        writeFile cx, spaceBetweenNumberUser
+        POP bx
+        MOV cx, 0007h
+        JMP printUsernameTop
+
+    print10:
+        MOV al, bl
+        AAM
+        ADD ah, 30h
+        ADD al, 30h
+        PUSH bx
+        MOV bh, ah
+        MOV bl, al
+        printCharacter bh
+        printCharacter bl
+        printCharacter 2Eh
+        PUSH bx
+        MOV numberForWrite, bh
+        writeFile 0001h numberForWrite
+        POP bx
+        PUSH bx
+        MOV numberForWrite, bl
+        writeFile 0001h numberForWrite
+        POP bx
+        POP bx
+        SUB bl, 01h
+        print spaceBetweenNumberUser
+        PUSH bx
+        LEA bx, spaceBetweenNumberUser
+        CALL chainLength
+        writeFile cx, spaceBetweenNumberUser
+        POP bx
+        MOV cx, 0007h
+
+    printUsernameTop:
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        LOOP printUsernameTop
+        print usernameFromArray
+        PUSH bx
+        writeFile 0007h usernameFromArray
+        POP bx
+        print nameLevelSpacing
+        PUSH bx
+        LEA bx, nameLevelSpacing
+        CALL chainLength
+        writeFile cx, nameLevelSpacing
+        POP bx
+        MOV bh, [si]
+        ADD bh, 30h
+        printCharacter bh
+        PUSH bx
+        MOV numberForWrite, bh
+        writeFile 0001h numberForWrite
+        POP bx
+        INC si
+        MOV bh, [si]
+        ADD bh, 30h
+        printCharacter bh
+        PUSH bx
+        MOV numberForWrite, bh
+        writeFile 0001h numberForWrite
+        POP bx
+        print levelScoreSpacing
+        PUSH bx
+        LEA bx, levelScoreSpacing
+        CALL chainLength
+        writeFile cx, levelScoreSpacing
+        POP bx
+        INC si
+        MOV bh, [si]
+        ADD bh, 30h
+        printCharacter bh
+        PUSH bx
+        MOV numberForWrite, bh
+        writeFile 0001h numberForWrite
+        POP bx
+        INC si
+        MOV bh, [si]
+        ADD bh, 30h
+        printCharacter bh
+        PUSH bx
+        MOV numberForWrite, bh
+        writeFile 0001h numberForWrite
+        POP bx
+        INC si
+        INC bl
+        JMP checkCount
+    
+    comeOutPrint:
+endm
+
+;------------LEER TECLA DEL TECLADO
+getKey macro
+    MOV ah, 00h
+    INT 16h
 endm

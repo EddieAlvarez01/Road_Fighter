@@ -45,10 +45,13 @@ username db 7 dup(" "), "$"
 password db 4 dup(" "), "$"
 defaultUser db "admin", "$"
 defaultPassword db "1234", "$"
+point db ".", "$"
+numberForWrite db 00 
 
 ;--------------------------MENSAJES DEL SISTEMA
 pressAKeyMsg db 10, 13, "Presiona una tecla para continuar....", "$"
-registeredUserMsg db 10, 13, "Usuario registrado correctamente", "$" 
+registeredUserMsg db 10, 13, "Usuario registrado correctamente", "$"
+pressSpaceForContinue db 10, 13, "Presiona espacio para continuar..", "$" 
 
 ;-------------------------MENSAJES DE ERROR
 passwordErrorIncorrectSyntax db 10, 10, 13, "Error la contrasena debe ser de 4 numeros unicamente", "$"
@@ -62,6 +65,7 @@ equalUsersMsg db 10, 10, 13, "Error el usuario ya esta registrado", "$"
 ;--------------------------VARIABLES DE MANEJO DE ARCHIVOS
 handle dw ?
 userFileName db "usr.txt", 00
+pointsReportFileName db "Puntos.rep", 00
 delimiter db 59, "$"
 defaultLevel db "00", "$"
 defaultScore db "00", "$"
@@ -70,6 +74,14 @@ newLine db 10, "$"
 readTxt db 460 dup(" "), "$"
 usernameFromFile db 7 dup(" "), "$"
 passwordFromFile db 4 dup(" "), "$"
+
+;-------------------------REPORTES
+startDesign db 10, 10, 10, 13, "--------------------------------------------------------------------------------", "$"
+finalDesign db 10, 13, "--------------------------------------------------------------------------------", "$"
+top10Sign db 10, 13, "                                 Top 10 puntos                                  ", "$"
+spaceBetweenNumberUser db "              ", "$"
+nameLevelSpacing db "                       ", "$"
+levelScoreSpacing db "                       ", "$"
 
 .code
 main proc
@@ -192,13 +204,29 @@ main proc
         readFile 01CCh readTxt
         closeFile
         putUsersArray
-        printCharacter 10
-        printCharacter 13
-        print usersAvailablePoints
+        createFile pointsReportFileName
         dottedOrder
-        printCharacter 10
-        printCharacter 13
-        print usersAvailablePoints
+        openFile pointsReportFileName 01h
+        print startDesign
+        LEA bx, startDesign
+        CALL chainLength
+        writeFile cx, startDesign
+        print top10Sign
+        LEA bx, top10Sign
+        CALL chainLength
+        writeFile cx, top10Sign
+        top10Printing
+        print finalDesign
+        LEA bx, finalDesign
+        CALL chainLength
+        writeFile cx, finalDesign
+        closeFile
+        print pressSpaceForContinue
+    
+    checkKey:
+        getKey
+        CMP ah, 39h
+        JNE checkKey 
         JMP administrationMenu
     
     showFileError:
@@ -282,7 +310,7 @@ clearUsername proc near
         RET
 clearUsername endp
 
-;CALCULA EL LARGO DE UNA CADENA ANTES DEL SIMBOLODE TERMINACION DE CADENA
+;CALCULA EL LARGO DE UNA CADENA ANTES DEL SIMBOLO DE TERMINACION DE CADENA
 chainLength proc near
     PUSH si           ; GUARDAR REGISTROS
     PUSH ax             ; GUARDAR REGISTROS
