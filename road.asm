@@ -34,6 +34,16 @@ scoreFromArray1 db 00
 scoreFromArray2 db 00
 usernameFromArray db 7 dup(" "), "$"
 levelFromArray db 00
+barWidth dw 0000
+barTotal dw 0000
+coordenateXVideoMode dw 0000
+coordenateYVideoMode dw 0000
+
+coordenateXCursor db 00
+coordenateYCursor db 00
+
+initialPosition dw 0000
+finalPosition dw 0000
 
 tenthNumber db 0
 unitNumber db 0
@@ -61,6 +71,7 @@ fseekErrorMsg db 10, 10, 13, "Error no se puede desplazar el puntero", "$"
 writeFileErrorMsg db 10, 10, 13, "Error no se puede escribir en archivo", "$"
 authenticationMsg db 10, 10, 13, "Error contrasena o usuario incorrecto", "$"
 equalUsersMsg db 10, 10, 13, "Error el usuario ya esta registrado", "$"
+emptyArrayMsg db 10, 10, 13, "La lista de jugadores esta vacia, no se generara el reporte", "$"
 
 ;--------------------------VARIABLES DE MANEJO DE ARCHIVOS
 handle dw ?
@@ -204,6 +215,12 @@ main proc
         readFile 01CCh readTxt
         closeFile
         putUsersArray
+        countArrayElements 
+        CMP cl, 00h
+        JA report
+        JMP showErrorEmptyArray
+    
+    report:
         createFile pointsReportFileName
         dottedOrder
         openFile pointsReportFileName 01h
@@ -227,6 +244,21 @@ main proc
         getKey
         CMP ah, 39h
         JNE checkKey 
+        JMP barCalculation
+    
+    barCalculation:
+        countArrayElements
+        MOV ch, 00h
+        MOV barTotal, cx
+        DEC cl
+        barWidthCalculation cl
+        saveItemsVideoMode
+        graphicMode
+        retrieveItemsVideoMode
+        frame
+        graphBarReport
+        readCharacterVideoMode
+        textMode
         JMP administrationMenu
     
     showFileError:
@@ -252,6 +284,12 @@ main proc
         print pressAKeyMsg
         readCharacterWithoutPrinting
         JMP mainMenu
+    
+    showErrorEmptyArray:
+        print emptyArrayMsg
+        print pressAKeyMsg
+        readCharacterWithoutPrinting
+        JMP administrationMenu
 main endp
 
 ;--------------------VERIFICAR QUE LA CONTRASEÑA INGRESADA SEA DE ACURDO CON EL FORMATO

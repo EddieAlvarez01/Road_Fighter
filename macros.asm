@@ -434,3 +434,275 @@ getKey macro
     MOV ah, 00h
     INT 16h
 endm
+
+;-----------ENTRAR AL MODO GRAFICO
+graphicMode macro
+    MOV ax, 0013h     ;   RESOLUCION: 320 * 200
+    INT 10h
+    ;MOV ax, 0A000h
+    ;MOV ds, ax
+endm
+
+;----------ENTRAR AL MODO TEXTO
+textMode macro
+    MOV ax, 0003h
+    INT 10h
+    ;MOV ax, @data
+    ;MOV ds, ax
+endm
+
+;----------CALCULAR PIXELES POR BARRA (ANCHO)
+barWidthCalculation macro num
+    PUSH ax
+    PUSH bx
+    PUSH dx
+    MOV al, num
+    MOV bl, 08h
+    MUL bl
+    MOV bx, 011Ch
+    SUB bx, ax
+    MOV ax, bx
+    MOV dx, 0000h
+    MOV bl, num
+    INC bl
+    MOV bh, 00h
+    DIV bx
+    MOV barWidth, ax
+    POP dx
+    POP bx
+    POP ax
+endm
+
+;-----------PINTAR PIXEL
+paintPixel macro color, x, y
+    PUSH ax
+    PUSH bx
+    PUSH cx
+    PUSH dx
+    MOV ah, 0Ch
+    MOV al, color
+    MOV bh, 00h
+    MOV cx, x
+    MOV dx, y
+    INT 10h
+    POP dx
+    POP cx
+    POP bx
+    POP ax  
+endm
+
+;-----------ARMAR MARCO DE REPORTE
+frame macro
+    LOCAL buildTopHeader, armLeftSide, buildDownHeader, armRightSide
+    MOV cx, 0140h
+    MOV coordenateYVideoMode, 0000h
+    MOV coordenateXVideoMode, 0000h
+
+    buildTopHeader:
+        paintPixel 0Fh, coordenateXVideoMode, coordenateYVideoMode
+        INC coordenateXVideoMode
+        LOOP buildTopHeader
+        MOV coordenateXVideoMode, 0000h
+        MOV cx, 00C8h
+    
+    armLeftSide:
+        paintPixel 0Fh, coordenateXVideoMode, coordenateYVideoMode
+        INC coordenateYVideoMode
+        LOOP armLeftSide
+        MOV cx, 0140h
+        DEC coordenateYVideoMode
+
+    buildDownHeader:
+        paintPixel 0Fh, coordenateXVideoMode, coordenateYVideoMode
+        INC coordenateXVideoMode
+        LOOP buildDownHeader
+        MOV cx, 00C8h
+        DEC coordenateXVideoMode
+    
+    armRightSide:
+        paintPixel 0Fh, coordenateXVideoMode, coordenateYVideoMode
+        DEC coordenateYVideoMode
+        LOOP armRightSide
+endm
+
+;--------------------GRAFICAR BARRA
+plotBar macro color, width
+    LOCAL barX, barY
+    MOV coordenateYVideoMode, 000Ah
+    MOV cx, width
+
+    barX:
+        PUSH cx
+        MOV cx, 009Eh
+    
+    barY:
+        paintPixel color, coordenateXVideoMode, coordenateYVideoMode
+        INC coordenateYVideoMode
+        LOOP barY
+        POP cx
+        INC coordenateXVideoMode
+        MOV coordenateYVideoMode, 000Ah
+        LOOP barX
+        DEC coordenateXVideoMode
+endm
+
+;---------------CALCULAR LA POSICION DE UN NUMERO PARA LA BARRA
+calculateBarNumberPosition macro
+    PUSH ax
+    PUSH bx
+    PUSH dx
+    MOV ax, finalPosition
+    ADD ax, initialPosition
+    MOV bx, 0002h
+    MOV dx, 0000h
+    DIV bx
+    MOV bx, 0028h
+    MUL bx
+    MOV dx, 0000h
+    MOV bx, 0140h
+    DIV bx
+    MOV coordenateYCursor, al
+    moveCursor coordenateXCursor, coordenateYCursor
+    POP dx
+    POP bx
+    POP ax
+endm
+
+
+;----------------CREAR REPORTE DE TOP 20 MAYORES PUNTUACIONES
+graphBarReport macro
+    LOCAL totalBarComparison, finishBarReport, continueBar
+    MOV bx, 0000h
+    LEA si, usersAvailablePoints
+    ADD si, 0009h
+    MOV coordenateXVideoMode, 0012h
+    MOV coordenateXCursor, 16h
+
+    totalBarComparison:
+        CMP bx, barTotal
+        JNE continueBar
+        JMP finishBarReport
+
+    continueBar:
+        MOV al, [si]
+        ADD al, 30h
+        MOV tenthNumber, al
+        INC si
+        MOV al, [si]
+        ADD al, 30h
+        MOV unitNumber, al
+        MOV cx, coordenateXVideoMode
+        MOV initialPosition, cx
+        plotBar 04h, barWidth
+        MOV cx, coordenateXVideoMode
+        MOV finalPosition, cx
+        calculateBarNumberPosition
+        printCharacterVideoMode tenthNumber
+        printCharacterVideoMode unitNumber
+        ADD coordenateXVideoMode, 0008h
+        ADD si, 000Ah
+        ADD coordenateYCursor, 04h
+        INC bx
+        JMP totalBarComparison
+    
+    finishBarReport:
+endm
+
+;--------LECTURA DE UN CARACTER EN MODO VIDEO
+readCharacterVideoMode macro
+    PUSH ax
+    MOV ah, 10h
+    INT 16h
+    POP ax
+endm
+
+;---------PUSHEAR ELEMENTOS PARA QUE SE GUARDEN AL PASAR AL MODO VIDEO
+saveItemsVideoMode macro
+    PUSH barWidth
+    PUSH barTotal
+    ;PUSH usersAvailablePoints
+endm
+
+;---------POPEAR ELEMENTOS EN EL MODOD VIDEO
+retrieveItemsVideoMode macro
+    ;POP usersAvailablePoints
+    POP barTotal
+    POP barWidth
+endm
+
+;------------CONTAR ELEMETOS DEL ARRAY
+countArrayElements macro
+    LOCAL accountPath, exitMacro
+    PUSH si
+    PUSH ax
+    MOV cl, 00h
+    LEA si, usersAvailablePoints
+
+    accountPath:
+        MOV al, [si] 
+        CMP al, 20h
+        JE exitMacro
+        CMP cl, 14h
+        JE exitMacro
+        ADD si, 000Bh
+        INC cl
+        JMP accountPath
+    
+    exitMacro:
+        POP ax
+        POP si
+endm
+
+;--------------TRAER INFORMACION DE DONDE ESTA EL CURSOR  dh = row  dl = column
+getInfoCursor macro
+    PUSH ax
+    PUSH bx
+    MOV ah, 03h
+    MOV bh, 00h
+    INT 10h
+    POP bx
+    POP ax
+endm
+
+;--------------MOVER EL CURSOR
+moveCursor macro row, column
+    PUSH ax
+    PUSH bx
+    PUSH dx
+    MOV ah, 02h
+    MOV bh, 00h
+    MOV dh, row
+    MOV dl, column
+    INT 10h
+    POP dx
+    POP bx
+    POP ax
+endm
+
+;-------------REGRESAR EL CURSOR AL ORIGEN
+setOriginCursor macro
+    PUSH ax
+    PUSH bx
+    PUSH dx
+    MOV ah, 02h
+    MOV bh, 00h
+    MOV dh, 00h
+    MOV dl, 00h
+    INT 10h
+    POP dx
+    POP bx
+    POP ax
+endm
+
+;-----------ESCRIBIR CARACTER EN MODO VIDEO
+printCharacterVideoMode macro asci
+    PUSH ax
+    PUSH bx
+    MOV ah, 0Eh
+    MOV al, asci
+    MOV bh, 00h
+    MOV bl, 0Fh
+    INT 10h
+    POP bx
+    POP ax
+endm
