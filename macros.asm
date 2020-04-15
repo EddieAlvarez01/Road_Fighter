@@ -526,14 +526,16 @@ frame macro
 endm
 
 ;--------------------GRAFICAR BARRA
-plotBar macro color, width
+plotBar macro color, width, heigth
     LOCAL barX, barY
-    MOV coordenateYVideoMode, 000Ah
+    PUSH bx
+    MOV cx, heigth
+    MOV coordenateYVideoMode, cx
     MOV cx, width
 
     barX:
         PUSH cx
-        MOV cx, 009Eh
+        MOV cx, downwardTravel
     
     barY:
         paintPixel color, coordenateXVideoMode, coordenateYVideoMode
@@ -541,9 +543,11 @@ plotBar macro color, width
         LOOP barY
         POP cx
         INC coordenateXVideoMode
-        MOV coordenateYVideoMode, 000Ah
+        MOV bx, heigth
+        MOV coordenateYVideoMode, bx
         LOOP barX
         DEC coordenateXVideoMode
+        POP bx
 endm
 
 ;---------------CALCULAR LA POSICION DE UN NUMERO PARA LA BARRA
@@ -584,16 +588,21 @@ graphBarReport macro
         JMP finishBarReport
 
     continueBar:
-        MOV al, [si]
-        ADD al, 30h
-        MOV tenthNumber, al
+        MOV ah, [si]
+        ADD ah, 30h
+        MOV tenthNumber, ah
+        SUB ah, 30h
         INC si
         MOV al, [si]
         ADD al, 30h
         MOV unitNumber, al
+        SUB al, 30h
+        AAD
+        MOV numberForWrite, al
+        calculateBarHeight
         MOV cx, coordenateXVideoMode
         MOV initialPosition, cx
-        plotBar 04h, barWidth
+        plotBar 04h, barWidth, barHeigth
         MOV cx, coordenateXVideoMode
         MOV finalPosition, cx
         calculateBarNumberPosition
@@ -705,4 +714,47 @@ printCharacterVideoMode macro asci
     INT 10h
     POP bx
     POP ax
+endm
+
+;------------SACAR EL PUNTAJE MAXIMO 100%
+getTopScore macro
+    PUSH si
+    PUSH ax
+    LEA si, usersAvailablePoints
+    ADD si, 0009h
+    MOV ah, [si]
+    INC si
+    MOV al, [si]
+    AAD
+    MOV maximunScore, al
+    POP ax
+    POP si
+endm
+
+;------------------ CALCULA LA ALTURA DE LA BARRA
+calculateBarHeight macro
+    PUSH ax
+    PUSH bx
+    PUSH dx
+    MOV al, numberForWrite
+    MOV bl, 64h
+    MUL bl
+    MOV dx, 0000h
+    MOV bl, maximunScore
+    MOV bh, 00h
+    DIV bx
+    MOV bl, 9Eh
+    MUL bl
+    MOV dx, 0000h
+    MOV bx, 0064h
+    DIV bx
+    MOV bl, 0A8h
+    MOV ah, 00h
+    MOV downwardTravel, ax
+    SUB bl, al
+    MOV bh, 00h
+    MOV barHeigth, bx
+    POP dx
+    POP bx
+    POP ax 
 endm

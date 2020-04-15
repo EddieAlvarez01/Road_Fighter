@@ -35,12 +35,17 @@ scoreFromArray2 db 00
 usernameFromArray db 7 dup(" "), "$"
 levelFromArray db 00
 barWidth dw 0000
+barHeigth dw 0000
+
+downwardTravel dw 0000
 barTotal dw 0000
 coordenateXVideoMode dw 0000
 coordenateYVideoMode dw 0000
 
 coordenateXCursor db 00
 coordenateYCursor db 00
+
+maximunScore db 00
 
 initialPosition dw 0000
 finalPosition dw 0000
@@ -252,6 +257,7 @@ main proc
         MOV barTotal, cx
         DEC cl
         barWidthCalculation cl
+        getTopScore
         saveItemsVideoMode
         graphicMode
         retrieveItemsVideoMode
