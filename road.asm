@@ -46,6 +46,7 @@ coordenateXCursor db 00
 coordenateYCursor db 00
 
 maximunScore db 00
+colorBar db 00
 
 initialPosition dw 0000
 finalPosition dw 0000

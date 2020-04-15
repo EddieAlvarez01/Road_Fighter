@@ -600,9 +600,10 @@ graphBarReport macro
         AAD
         MOV numberForWrite, al
         calculateBarHeight
+        setBarColor numberForWrite
         MOV cx, coordenateXVideoMode
         MOV initialPosition, cx
-        plotBar 04h, barWidth, barHeigth
+        plotBar colorBar, barWidth, barHeigth
         MOV cx, coordenateXVideoMode
         MOV finalPosition, cx
         calculateBarNumberPosition
@@ -757,4 +758,38 @@ calculateBarHeight macro
     POP dx
     POP bx
     POP ax 
+endm
+
+;----------------CALCULAR COLOR
+setBarColor macro number
+    CMP number, 14h
+    JBE assignRed
+    CMP number, 28h
+    JBE assignedBlue
+    CMP number, 3Ch
+    JBE assignedYellow
+    CMP number, 50h
+    JBE assignedGreen
+    JMP assignedWhite
+
+    assignRed:
+        MOV colorBar, 04h
+        JMP exitColors
+
+    assignedBlue:
+        MOV colorBar, 01h
+        JMP exitColors
+    
+    assignedYellow:
+        MOV colorBar, 0Eh
+        JMP exitColors
+    
+    assignedGreen:
+        MOV colorBar, 02h
+        JMP exitColors
+
+    assignedWhite:
+        MOV colorBar, 0Fh
+    
+    exitColors:
 endm
