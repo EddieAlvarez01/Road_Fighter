@@ -27,6 +27,11 @@ menuUserOption1 db 10, 10, 13, "1) Iniciar Juego", "$"
 menuUserOption2 db 10, 13, "2) Cargar Juego", "$"
 menuUserOption3 db 10, 13, "3) Salir", 10, 13, "$"
 
+;------------------------MENU ORDENAMIENTOS
+ordinationOption1 db 10, 13, "1) Ordenamiento BubbleSort", "$"
+ordinationOption2 db 10, 13, "2) Ordenamiento QuickSort", "$"
+ordinationOption3 db 10, 13, "3) Ordenamiento ShellSort", 10, 13, "$"
+
 ;-------------------------VARIABLES GENERALES
 top10PtsArray db 110 dup(" "), "$"
 usersAvailablePoints db 220 dup(" "), "$"
@@ -54,6 +59,10 @@ finalPosition dw 0000
 tenthNumber db 0
 unitNumber db 0
 
+sortingSpeed db 00
+
+typeOfSystem db 00
+
 ;--------------------------VARIABLES PARA VERIFICACION DE USUARIOS
 usernameMsg db 10, 10, 13, "Nombre de usuario: ", "$"
 passwordMsg db 10, 13, "Contrasena: ", "$"
@@ -67,7 +76,21 @@ numberForWrite db 00
 ;--------------------------MENSAJES DEL SISTEMA
 pressAKeyMsg db 10, 13, "Presiona una tecla para continuar....", "$"
 registeredUserMsg db 10, 13, "Usuario registrado correctamente", "$"
-pressSpaceForContinue db 10, 13, "Presiona espacio para continuar..", "$" 
+pressSpaceForContinue db 10, 13, "Presiona espacio para continuar..", "$"
+
+orderingBubbleSortMsg db "ORDENAMIENTO: BUBBLESORT ", "$"
+orderingQuickSortMsg db "ORDENAMIENTO: QUICKSORT ", "$"
+orderingShellSortMsg db "ORDENAMIENTO: SHELLSORT ", "$"
+
+timeMsg db "TIEMPO: 00:00  ", "$"
+
+speedMsg db "VELOCIDAD: ", "$"
+
+speedInputMsg db 10, 10, 13, "INGRESE UNA VELOCIDAD (0-9)", 10, 13, "$"
+
+;-------------------------MENU DE TIPO DE ORDENADO
+upwardOption db 10, 10, 13, "1) Descendente", "$"
+topDownOption db 10, 13, "2) Ascendente", 10, 13, "$"
 
 ;-------------------------MENSAJES DE ERROR
 passwordErrorIncorrectSyntax db 10, 10, 13, "Error la contrasena debe ser de 4 numeros unicamente", "$"
@@ -262,9 +285,89 @@ main proc
         saveItemsVideoMode
         graphicMode
         retrieveItemsVideoMode
-        frame
+        frame 0000h 0000h
+        putUsersArray
         graphBarReport
         readCharacterVideoMode
+        textMode
+    
+    ordersMenu:
+        print ordinationOption1
+        print ordinationOption2
+        print ordinationOption3
+        readOption
+        SUB al, 30h
+        CMP al, 01h
+        JE jumpToBubbleSort
+        CMP al, 02h
+        JE jumpToQuickSort
+        CMP al, 03h
+        JE jumpToShellSort
+        JMP administrationMenu
+
+    jumpToBubbleSort:
+        print speedInputMsg
+        readOption
+        SUB al, 30h
+        MOV sortingSpeed, al
+        JMP bubbleSort
+    
+    jumpToQuickSort:
+        print speedInputMsg
+        readOption
+        SUB al, 30h
+        MOV sortingSpeed, al
+        JMP quickSort
+
+    jumpToShellSort:
+        print speedInputMsg
+        readOption
+        SUB al, 30h
+        MOV sortingSpeed, al
+        JMP shellSort
+
+    bubbleSort:
+        print upwardOption
+        print topDownOption
+        readOption
+        SUB al, 30h
+        MOV typeOfSystem, al
+        graphicMode
+        LEA bx, orderingBubbleSortMsg
+        CALL chainLength
+        printGraphicMode orderingBubbleSortMsg 00h 00h cx
+        getInfoCursor
+        LEA bx, timeMsg
+        CALL chainLength
+        printGraphicMode timeMsg 00h dl cx
+        frame 0000h 0010h
+        graphBarReport2 
+        JMP checkKey2
+
+    quickSort:
+        print upwardOption
+        print topDownOption
+        readOption
+        SUB al, 30h
+        MOV typeOfSystem, al
+        graphicMode
+        JMP checkKey2
+
+    shellSort:
+        print upwardOption
+        print topDownOption
+        readOption
+        SUB al, 30h
+        MOV typeOfSystem, al
+        graphicMode
+        JMP checkKey2
+
+    checkKey2:
+        getKey
+        CMP ah, 39h
+        JNE checkKey2 
+    
+    startAnimation:
         textMode
         JMP administrationMenu
     

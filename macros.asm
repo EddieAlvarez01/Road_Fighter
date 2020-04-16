@@ -492,18 +492,20 @@ paintPixel macro color, x, y
 endm
 
 ;-----------ARMAR MARCO DE REPORTE
-frame macro
+frame macro xInitial, yInitial
     LOCAL buildTopHeader, armLeftSide, buildDownHeader, armRightSide
     MOV cx, 0140h
-    MOV coordenateYVideoMode, 0000h
-    MOV coordenateXVideoMode, 0000h
+    MOV coordenateYVideoMode, yInitial
+    MOV coordenateXVideoMode, xInitial
 
     buildTopHeader:
         paintPixel 0Fh, coordenateXVideoMode, coordenateYVideoMode
         INC coordenateXVideoMode
         LOOP buildTopHeader
         MOV coordenateXVideoMode, 0000h
-        MOV cx, 00C8h
+        MOV bx, 00C8h
+        SUB bx, yInitial
+        MOV cx, bx
     
     armLeftSide:
         paintPixel 0Fh, coordenateXVideoMode, coordenateYVideoMode
@@ -516,7 +518,9 @@ frame macro
         paintPixel 0Fh, coordenateXVideoMode, coordenateYVideoMode
         INC coordenateXVideoMode
         LOOP buildDownHeader
-        MOV cx, 00C8h
+        MOV bx, 00C8h
+        SUB bx, yInitial
+        MOV cx, bx
         DEC coordenateXVideoMode
     
     armRightSide:
@@ -548,6 +552,52 @@ plotBar macro color, width, heigth
         LOOP barX
         DEC coordenateXVideoMode
         POP bx
+endm
+
+
+;----------------GRAFICAR BARRAS PARA ORDENAMIENTO
+graphBarReport2 macro
+    LOCAL totalBarComparison2, finishBarReport2, continueBar2
+    MOV bx, 0000h
+    LEA si, usersAvailablePoints
+    ADD si, 0009h
+    MOV coordenateXVideoMode, 0012h
+    MOV coordenateXCursor, 16h
+
+    totalBarComparison2:
+        CMP bx, barTotal
+        JNE continueBar2
+        JMP finishBarReport2
+
+    continueBar2:
+        MOV ah, [si]
+        ADD ah, 30h
+        MOV tenthNumber, ah
+        SUB ah, 30h
+        INC si
+        MOV al, [si]
+        ADD al, 30h
+        MOV unitNumber, al
+        SUB al, 30h
+        AAD
+        MOV numberForWrite, al
+        calculateBarHeight 8Eh
+        setBarColor numberForWrite
+        MOV cx, coordenateXVideoMode
+        MOV initialPosition, cx
+        plotBar colorBar, barWidth, barHeigth
+        MOV cx, coordenateXVideoMode
+        MOV finalPosition, cx
+        calculateBarNumberPosition
+        printCharacterVideoMode tenthNumber
+        printCharacterVideoMode unitNumber
+        ADD coordenateXVideoMode, 0008h
+        ADD si, 000Ah
+        ADD coordenateYCursor, 04h
+        INC bx
+        JMP totalBarComparison2
+    
+    finishBarReport2:
 endm
 
 ;---------------CALCULAR LA POSICION DE UN NUMERO PARA LA BARRA
@@ -599,7 +649,7 @@ graphBarReport macro
         SUB al, 30h
         AAD
         MOV numberForWrite, al
-        calculateBarHeight
+        calculateBarHeight 9Eh
         setBarColor numberForWrite
         MOV cx, coordenateXVideoMode
         MOV initialPosition, cx
@@ -733,7 +783,7 @@ getTopScore macro
 endm
 
 ;------------------ CALCULA LA ALTURA DE LA BARRA
-calculateBarHeight macro
+calculateBarHeight macro heigth
     PUSH ax
     PUSH bx
     PUSH dx
@@ -744,7 +794,7 @@ calculateBarHeight macro
     MOV bl, maximunScore
     MOV bh, 00h
     DIV bx
-    MOV bl, 9Eh
+    MOV bl, heigth
     MUL bl
     MOV dx, 0000h
     MOV bx, 0064h
@@ -762,6 +812,7 @@ endm
 
 ;----------------CALCULAR COLOR
 setBarColor macro number
+    LOCAL assignRed, assignedBlue, assignedYellow, assignedGreen, assignedWhite, exitColors
     CMP number, 14h
     JBE assignRed
     CMP number, 28h
@@ -792,4 +843,75 @@ setBarColor macro number
         MOV colorBar, 0Fh
     
     exitColors:
+endm
+
+;-------------GENERA UN RETRASO
+delay macro const
+    LOCAL d1, d2, finDelay
+    PUSH si
+    MOV si, const
+    
+    d1:
+        DEC si
+        JZ finDelay
+        MOV di, const
+
+    d2:
+        DEC di
+        JNZ d2
+        JMP d1
+
+    finDelay:
+        POP si 
+endm
+
+;--------------EMITE UN SONIDO
+sound macro time
+    PUSH ax
+    PUSH bx
+    PUSH dx
+    MOV al, 0B6h
+    OUT 43h, al
+    ;MOV dx, 0012h
+    MOV ax, 11D0h
+    ;MOV bx, hz
+    ;DIV bx
+    OUT 42h, al
+    MOV al, ah
+    OUT 42h, al
+    IN al, 61h
+    OR al, 00000011b
+    OUT 61h, al
+    delay time
+    IN al, 61h
+    AND al, 11111100b
+    OUT 61h, al
+    POP dx
+    POP bx
+    POP ax 
+endm
+
+;-----------------IMPRIMIR CADENA EN MODO GRAFICO
+printGraphicMode macro chain, row, column, length
+    PUSH ax
+    PUSH es
+    PUSH bp
+    PUSH cx
+    PUSH dx
+    MOV ax, @data
+    MOV es, ax
+    LEA bp, chain
+    MOV ah, 13h
+    MOV al, 01h
+    MOV bh, 00h
+    MOV bl, 0Fh
+    MOV cx, length
+    MOV dh, row
+    MOV dl, column
+    INT 10h
+    POP dx
+    POP cx
+    POP bp
+    POP es
+    POP ax
 endm
