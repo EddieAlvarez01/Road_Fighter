@@ -63,6 +63,10 @@ sortingSpeed db 00
 
 typeOfSystem db 00
 
+orderingStyle db 00
+
+varDelay dw 0000
+
 ;--------------------------VARIABLES PARA VERIFICACION DE USUARIOS
 usernameMsg db 10, 10, 13, "Nombre de usuario: ", "$"
 passwordMsg db 10, 13, "Contrasena: ", "$"
@@ -303,7 +307,7 @@ main proc
         JE jumpToQuickSort
         CMP al, 03h
         JE jumpToShellSort
-        JMP administrationMenu
+        JMP jumpToBubbleSort
 
     jumpToBubbleSort:
         print speedInputMsg
@@ -327,6 +331,7 @@ main proc
         JMP shellSort
 
     bubbleSort:
+        MOV orderingStyle, 01h
         print upwardOption
         print topDownOption
         readOption
@@ -336,40 +341,111 @@ main proc
         LEA bx, orderingBubbleSortMsg
         CALL chainLength
         printGraphicMode orderingBubbleSortMsg 00h 00h cx
+        JMP generalInstruccions
+
+    quickSort:
+        MOV orderingStyle, 02h
+        print upwardOption
+        print topDownOption
+        readOption
+        SUB al, 30h
+        MOV typeOfSystem, al
+        graphicMode
+        LEA bx, orderingQuickSortMsg
+        CALL chainLength
+        printGraphicMode orderingQuickSortMsg 00h 00h cx
+        JMP generalInstruccions
+
+    shellSort:
+        MOV orderingStyle, 03h
+        print upwardOption
+        print topDownOption
+        readOption
+        SUB al, 30h
+        MOV typeOfSystem, al
+        graphicMode
+        LEA bx, orderingShellSortMsg
+        CALL chainLength
+        printGraphicMode orderingShellSortMsg 00h 00h cx
+
+    generalInstruccions:
         getInfoCursor
         LEA bx, timeMsg
         CALL chainLength
         printGraphicMode timeMsg 00h dl cx
         frame 0000h 0010h
-        graphBarReport2 
-        JMP checkKey2
-
-    quickSort:
-        print upwardOption
-        print topDownOption
-        readOption
-        SUB al, 30h
-        MOV typeOfSystem, al
-        graphicMode
-        JMP checkKey2
-
-    shellSort:
-        print upwardOption
-        print topDownOption
-        readOption
-        SUB al, 30h
-        MOV typeOfSystem, al
-        graphicMode
-        JMP checkKey2
-
+        graphBarReport2
+    
     checkKey2:
         getKey
         CMP ah, 39h
-        JNE checkKey2 
+        JNE checkKey2
+        calculateDelayTime sortingSpeed
+        CMP orderingStyle, 01h
+        JE preludeBubbleAnimation
+        CMP orderingStyle, 02h
+        JE preludeQuickAnimation
+        CMP orderingStyle, 03h
+        JE preludeShellAnimation
+
+    preludeBubbleAnimation:
+        CMP typeOfSystem, 01h
+        JE  jumpTobubbleAnimationDescending
+        CMP typeOfSystem, 02h
+        JE jumpTobubbleAnimationAscending
+        JMP bubbleAnimationDescending
+
+    preludeQuickAnimation:
+        CMP typeOfSystem, 01h
+        JE jumpToquickAnimationDescending
+        CMP typeOfSystem, 02h
+        JE jumpToquickAnimationAscending
+        JMP quickAnimationDescending
+
+    preludeShellAnimation:
+        CMP typeOfSystem, 01h
+        JE jumpToshellAnimationDescending
+        CMP typeOfSystem, 02h
+        JE jumpToshellAnimationAscending
+        JMP shellAnimationDescending
+
+    jumpTobubbleAnimationDescending:
+        JMP bubbleAnimationDescending
+
+    jumpTobubbleAnimationAscending:
+        JMP bubbleAnimationAscending
+
+    jumpToquickAnimationDescending:
+        JMP quickAnimationDescending
+
+    jumpToquickAnimationAscending:
+        JMP quickAnimationAscending
     
-    startAnimation:
+    jumpToshellAnimationDescending:
+        JMP shellAnimationDescending
+    
+    jumpToshellAnimationAscending:
+        JMP shellAnimationAscending
+    
+    bubbleAnimationDescending:
+        bubbleDescending
+        readCharacterVideoMode
         textMode
         JMP administrationMenu
+
+    bubbleAnimationAscending:
+        bubbleAscending
+        readCharacterVideoMode
+        textMode
+        JMP administrationMenu
+
+    quickAnimationDescending:
+
+    quickAnimationAscending:
+
+    shellAnimationDescending:
+
+    shellAnimationAscending: 
     
     showFileError:
         print fileCreationErrorMsg

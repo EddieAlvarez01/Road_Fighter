@@ -915,3 +915,313 @@ printGraphicMode macro chain, row, column, length
     POP es
     POP ax
 endm
+
+;------------------CALCULAR TIEMPO DEL DELAY SEGUN LA VELOCIDAD ESCOJIDA
+calculateDelayTime macro velocity
+    PUSH ax
+    PUSH bx
+    PUSH dx
+    MOV ax, 012Ch
+    MOV bl, velocity
+    MOV bh, 00h
+    MUL bx
+    MOV bx, 0E74h
+    SUB bx, ax
+    MOV varDelay, bx
+    POP dx
+    POP bx
+    POP ax
+endm
+
+;-------------------BURBUJA DE FORMA DESCENDENTE
+bubbleDescending macro
+    LOCAL arrayPath2, vacuumComparison2, cycleIn2, vacuumComparisonCycleIn2, preStartCycleY2, startCycleY2, fillOutName2, memoryExchange3, memoryExchange4, increaseCycleOne2, getOutBigPicture2
+    MOV bl, 00h
+    MOV bh, 00h
+    LEA di, usersAvailablePoints
+    MOV si, di
+
+    arrayPath2:
+        CMP bl, 14h
+        JNE vacuumComparison2
+        JMP getOutBigPicture2
+    
+    vacuumComparison2:
+        MOV al, [di]
+        CMP al, 20h
+        JNE cycleIn2
+        JMP getOutBigPicture2
+    
+    cycleIn2:
+        INC bh
+        ADD si, 000Bh
+        CMP bh, 14h
+        JNE vacuumComparisonCycleIn2
+        JMP increaseCycleOne2
+    
+    vacuumComparisonCycleIn2:
+        MOV al, [si]
+        CMP al, 20h
+        JNE preStartCycleY2
+        JMP increaseCycleOne2
+
+    preStartCycleY2:
+        ADD si, 09h
+        MOV ah, [si]
+        INC si
+        MOV al, [si]
+        AAD
+        MOV scoreFromArray2, al
+        ADD di, 09h
+        MOV ah, [di]
+        INC di
+        MOV al, [di]
+        AAD
+        MOV scoreFromArray1, al
+        DEC si
+        DEC di
+        SUB si, 09h
+        SUB di, 09h
+    
+    startCycleY2:
+        MOV al, scoreFromArray1
+        CMP al, scoreFromArray2
+        JAE cycleIn2
+        PUSH si
+        LEA si, usernameFromArray
+        MOV cx, 0007h
+    
+    fillOutName2:
+        MOV al, [di]
+        MOV [si], al
+        INC di
+        INC si
+        LOOP fillOutName2
+        MOV ah, [di]
+        INC di
+        MOV al, [di]
+        AAD
+        MOV levelFromArray, al
+        SUB di, 0008h
+        MOV cx, 000Bh
+        POP si
+
+    memoryExchange3:
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        LOOP memoryExchange3
+        SUB di, 000Bh
+        SUB si, 000Bh
+        PUSH di
+        LEA di, usernameFromArray
+        MOV cx, 0007h
+
+    memoryExchange4:
+        MOV al, [di]
+        MOV [si], al
+        INC di
+        INC si
+        LOOP memoryExchange4
+        MOV al, levelFromArray
+        AAM
+        MOV [si], ah
+        INC si
+        MOV [si], al
+        MOV al, scoreFromArray1
+        AAM
+        INC si
+        MOV [si], ah
+        INC si
+        MOV [si], al
+        INC si
+        POP di
+        SUB si, 000Bh
+        PUSH bx
+        PUSH si
+        PUSH di
+        textMode
+        graphicMode
+        frame 0000h 0010h
+        LEA bx, orderingBubbleSortMsg
+        CALL chainLength
+        printGraphicMode orderingBubbleSortMsg 00h 00h cx
+        getInfoCursor
+        LEA bx, timeMsg
+        CALL chainLength
+        printGraphicMode timeMsg 00h dl cx
+        graphBarReport2
+        delay varDelay
+        POP di
+        POP si
+        POP bx
+        JMP cycleIn2
+
+
+    increaseCycleOne2:
+        INC bl
+        ADD di, 000Bh
+        MOV si, di
+        MOV bh, bl
+        JMP arrayPath2
+    
+    getOutBigPicture2:
+        textMode
+        graphicMode
+        frame 0000h 0010h
+        LEA bx, orderingBubbleSortMsg
+        CALL chainLength
+        printGraphicMode orderingBubbleSortMsg 00h 00h cx
+        getInfoCursor
+        LEA bx, timeMsg
+        CALL chainLength
+        printGraphicMode timeMsg 00h dl cx
+        graphBarReport2
+endm
+
+;---------------------BURBUJA ASCENDENTE
+bubbleAscending macro
+    LOCAL arrayPath3, vacuumComparison3, cycleIn3, vacuumComparisonCycleIn3, preStartCycleY3, startCycleY3, fillOutName3, memoryExchange5, memoryExchange6, increaseCycleOne3, getOutBigPicture3
+    MOV bl, 00h
+    MOV bh, 00h
+    LEA di, usersAvailablePoints
+    MOV si, di
+
+    arrayPath3:
+        CMP bl, 14h
+        JNE vacuumComparison3
+        JMP getOutBigPicture3
+    
+    vacuumComparison3:
+        MOV al, [di]
+        CMP al, 20h
+        JNE cycleIn3
+        JMP getOutBigPicture3
+    
+    cycleIn3:
+        INC bh
+        ADD si, 000Bh
+        CMP bh, 14h
+        JNE vacuumComparisonCycleIn3
+        JMP increaseCycleOne3
+    
+    vacuumComparisonCycleIn3:
+        MOV al, [si]
+        CMP al, 20h
+        JNE preStartCycleY3
+        JMP increaseCycleOne3
+
+    preStartCycleY3:
+        ADD si, 09h
+        MOV ah, [si]
+        INC si
+        MOV al, [si]
+        AAD
+        MOV scoreFromArray2, al
+        ADD di, 09h
+        MOV ah, [di]
+        INC di
+        MOV al, [di]
+        AAD
+        MOV scoreFromArray1, al
+        DEC si
+        DEC di
+        SUB si, 09h
+        SUB di, 09h
+    
+    startCycleY3:
+        MOV al, scoreFromArray1
+        CMP al, scoreFromArray2
+        JBE cycleIn3
+        PUSH si
+        LEA si, usernameFromArray
+        MOV cx, 0007h
+    
+    fillOutName3:
+        MOV al, [di]
+        MOV [si], al
+        INC di
+        INC si
+        LOOP fillOutName3
+        MOV ah, [di]
+        INC di
+        MOV al, [di]
+        AAD
+        MOV levelFromArray, al
+        SUB di, 0008h
+        MOV cx, 000Bh
+        POP si
+
+    memoryExchange5:
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        LOOP memoryExchange5
+        SUB di, 000Bh
+        SUB si, 000Bh
+        PUSH di
+        LEA di, usernameFromArray
+        MOV cx, 0007h
+
+    memoryExchange6:
+        MOV al, [di]
+        MOV [si], al
+        INC di
+        INC si
+        LOOP memoryExchange6
+        MOV al, levelFromArray
+        AAM
+        MOV [si], ah
+        INC si
+        MOV [si], al
+        MOV al, scoreFromArray1
+        AAM
+        INC si
+        MOV [si], ah
+        INC si
+        MOV [si], al
+        INC si
+        POP di
+        SUB si, 000Bh
+        PUSH bx
+        PUSH si
+        PUSH di
+        textMode
+        graphicMode
+        frame 0000h 0010h
+        LEA bx, orderingBubbleSortMsg
+        CALL chainLength
+        printGraphicMode orderingBubbleSortMsg 00h 00h cx
+        getInfoCursor
+        LEA bx, timeMsg
+        CALL chainLength
+        printGraphicMode timeMsg 00h dl cx
+        graphBarReport2
+        delay varDelay
+        POP di
+        POP si
+        POP bx
+        JMP cycleIn3
+
+    increaseCycleOne3:
+        INC bl
+        ADD di, 000Bh
+        MOV si, di
+        MOV bh, bl
+        JMP arrayPath3
+    
+    getOutBigPicture3:
+        textMode
+        graphicMode
+        frame 0000h 0010h
+        LEA bx, orderingBubbleSortMsg
+        CALL chainLength
+        printGraphicMode orderingBubbleSortMsg 00h 00h cx
+        getInfoCursor
+        LEA bx, timeMsg
+        CALL chainLength
+        printGraphicMode timeMsg 00h dl cx
+        graphBarReport2
+endm
