@@ -713,6 +713,29 @@ countArrayElements macro
         POP si
 endm
 
+;---------------CONTAR ELEMENTOS GENERICO
+countArrayElementsGeneric macro array
+    LOCAL accountPath2, exitMacro2
+    PUSH si
+    PUSH ax
+    MOV cl, 00h
+    LEA si, array
+
+    accountPath2:
+        MOV al, [si]
+        CMP al, 20h
+        JE exitMacro2
+        CMP cl, 14h
+        JE exitMacro2
+        ADD si, 000Bh
+        INC cl
+        JMP accountPath2
+    
+    exitMacro2:
+        POP ax
+        POP si
+endm
+
 ;--------------TRAER INFORMACION DE DONDE ESTA EL CURSOR  dh = row  dl = column
 getInfoCursor macro
     PUSH ax
@@ -1224,4 +1247,107 @@ bubbleAscending macro
         CALL chainLength
         printGraphicMode timeMsg 00h dl cx
         graphBarReport2
+endm
+
+;-------CALCULAR FINAL DEL ARRAY
+calculateFinalArray macro array
+    LOCAL cycle, exitMacro
+    PUSH cx
+    PUSH si
+    countArrayElementsGeneric array
+    DEC cl
+    MOV finalIndex, cl
+    LEA si, array
+    ADD si, 000Ah
+    MOV cl, 00h
+
+    cycle:
+        MOV finalNumberDirection, si
+        CMP cl, finalIndex
+        JE exitMacro
+        INC cl
+        ADD si, 000Bh
+        JMP cycle
+
+    exitMacro:
+        POP si
+        POP cx
+endm
+
+;---------CALCULAR PIVOTE DE UN ARREGLO O RECORTE DE ARREGLO
+calculatePivot macro array, start, final
+    LOCAL cycle, exitMacro
+    PUSH ax
+    PUSH si
+    PUSH cx
+    PUSH bx
+    MOV al, start
+    ADD al, final
+    MOV ah, 00h
+    MOV bl, 02h
+    DIV bl
+    LEA si, array
+    ADD si, 0009h
+    MOV cl, 00h
+
+    cycle:
+        CMP cl, al
+        JE exitMacro
+        INC cl
+        ADD si, 000Bh
+        JMP cycle
+    
+    exitMacro:
+        MOV ah, [si]
+        INC si
+        MOV al, [si]
+        AAD
+        MOV pivotNumber, al
+        POP bx
+        POP cx
+        POP si
+        POP ax
+endm
+
+;----------------------MOVER PUNTERO DEL INICIO
+setPointer macro array, index
+    LOCAL cycle, exitMacro
+    PUSH si
+    PUSH cx
+    LEA si, array
+    MOV cl, 00h
+    ADD si, 0009h
+
+    cycle:
+        CMP cl, index
+        JE exitMacro
+        INC cl
+        ADD si, 000Bh
+        JMP cycle
+    
+    exitMacro:
+        MOV startNumberDirection, si
+        POP cx
+        POP si
+endm
+
+setPointerFinal macro array, index
+    LOCAL cycle, exitMacro
+    PUSH si
+    PUSH cx
+    LEA si, array
+    MOV cl, 00h
+    ADD si, 000Ah
+
+    cycle:
+        CMP cl, index
+        JE exitMacro
+        INC cl
+        ADD si, 000Bh
+        JMP cycle
+    
+    exitMacro:
+        MOV finalNumberDirection, si
+        POP cx
+        POP si
 endm

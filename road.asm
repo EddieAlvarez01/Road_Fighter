@@ -67,6 +67,11 @@ orderingStyle db 00
 
 varDelay dw 0000
 
+pivotNumber db 00
+startNumberDirection dw 0000
+finalIndex db 00
+finalNumberDirection dw 0000
+
 ;--------------------------VARIABLES PARA VERIFICACION DE USUARIOS
 usernameMsg db 10, 10, 13, "Nombre de usuario: ", "$"
 passwordMsg db 10, 13, "Contrasena: ", "$"
@@ -440,6 +445,13 @@ main proc
         JMP administrationMenu
 
     quickAnimationDescending:
+        calculateFinalArray usersAvailablePoints
+        MOV bh, 00h
+        MOV bl, finalIndex
+        CALL quickSortDescending
+        readCharacterVideoMode
+        textMode
+        JMP administrationMenu
 
     quickAnimationAscending:
 
@@ -679,5 +691,173 @@ checkRegistration proc near
         readCharacterWithoutPrinting
         JMP mainMenu
 checkRegistration endp
+
+;----------------------ORDENA EL ARRAY CON QUICKSORT DE FORMA DESCENDENTE  ARRAY = AL ARRAY A ORDENAR  (BH) SE LE PASA EL PRIMERO, 
+;(BL) EL ULTIMO
+quickSortDescending proc near
+    MOV ch, bh                        ;CH = I
+    MOV cl, bl                        ;CL = J
+    setPointer usersAvailablePoints bh
+    setPointerFinal usersAvailablePoints bl                        
+    calculatePivot usersAvailablePoints bh bl    ;DEVUELVE EL NUMERO PIVOTE
+    MOV si, startNumberDirection
+    MOV di, finalNumberDirection
+
+    doWhile:
+    
+    cycleForMore:
+        MOV ah, [si]
+        INC si
+        MOV al, [si]
+        AAD
+        DEC si
+        CMP al, pivotNumber
+        JNA juniorCycle
+        INC ch
+        ADD si, 000Bh
+        JMP cycleForMore
+    
+    juniorCycle:
+        MOV al, [di]
+        DEC di
+        MOV ah, [di]
+        INC di
+        AAD
+        CMP al, pivotNumber
+        JNB checkExchange
+        DEC cl
+        SUB di, 000Bh
+        JMP juniorCycle
+
+    checkExchange:
+        CMP ch, cl
+        JLE preparesExchange
+        JMP whileCheck
+    
+    preparesExchange:
+        SUB si, 0009h
+        SUB di, 000Ah
+        PUSH cx
+        PUSH di
+        MOV cx, 0007h
+        LEA di, usernameFromArray
+
+    saveName:
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        LOOP saveName
+        MOV ah, [si]
+        INC si
+        MOV al, [si]
+        AAD
+        MOV levelFromArray, al
+        INC si
+        MOV ah, [si]
+        INC si
+        MOV al, [si]
+        AAD
+        MOV scoreFromArray1, al
+        SUB si, 000Ah
+        POP di
+        POP cx
+        PUSH cx
+        MOV cx, 000Bh
+    
+    jToI:
+        MOV al, [di]
+        MOV [si], al
+        INC si
+        INC di
+        LOOP jToI
+        SUB si, 0002h
+        SUB di, 000Bh
+        PUSH si
+        MOV cx, 0007h
+        LEA si, usernameFromArray
+
+    iToJusername:
+        MOV al, [si]
+        MOV [di], al
+        INC di
+        INC si
+        LOOP iToJusername
+        MOV al, levelFromArray
+        AAM
+        MOV [di], ah
+        INC di
+        MOV [di], al
+        INC di
+        MOV al, scoreFromArray1
+        AAM
+        MOV [di], ah
+        INC di
+        MOV [di], al
+        POP si
+        POP cx
+        INC ch
+        DEC cl
+        ADD si, 000Bh
+        SUB di, 000Bh
+        PUSH cx
+        PUSH bx
+        PUSH si
+        PUSH di
+        textMode
+        graphicMode
+        frame 0000h 0010h
+        LEA bx, orderingQuickSortMsg
+        CALL chainLength
+        printGraphicMode orderingQuickSortMsg 00h 00h cx
+        getInfoCursor
+        LEA bx, timeMsg
+        CALL chainLength
+        printGraphicMode timeMsg 00h dl cx
+        graphBarReport2
+        delay varDelay
+        POP di
+        POP si
+        POP bx
+        POP cx
+
+    whileCheck:
+        CMP ch, cl
+        JNLE checkLargeNumbers
+        JMP doWhile
+    
+    checkLargeNumbers:
+        CMP bh, cl
+        JNL checkSmallNumbers
+        PUSH si
+        PUSH di
+        PUSH cx
+        PUSH bx
+        MOV bh, bh
+        MOV bl, cl
+        CALL quickSortDescending
+        POP bx
+        POP cx
+        POP di
+        POP si
+    
+    checkSmallNumbers:
+        CMP ch, bl
+        JNL exitProc
+        PUSH si
+        PUSH di
+        PUSH cx
+        PUSH bx
+        MOV bh, ch
+        MOV bl, bl
+        CALL quickSortDescending
+        POP bx
+        POP cx
+        POP di
+        POP si
+    
+    exitProc:
+        RET
+quickSortDescending endp
 
 end main
