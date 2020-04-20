@@ -454,6 +454,13 @@ main proc
         JMP administrationMenu
 
     quickAnimationAscending:
+        calculateFinalArray usersAvailablePoints
+        MOV bh, 00h
+        MOV bl, finalIndex
+        CALL quickSortAscending
+        readCharacterVideoMode
+        textMode
+        JMP administrationMenu
 
     shellAnimationDescending:
 
@@ -859,5 +866,173 @@ quickSortDescending proc near
     exitProc:
         RET
 quickSortDescending endp
+
+;----------------------ORDENA EL ARRAY CON QUICKSORT DE FORMA DESCENDENTE  ARRAY = AL ARRAY A ORDENAR  (BH) SE LE PASA EL PRIMERO, 
+;(BL) EL ULTIMO
+quickSortAscending proc near
+    MOV ch, bh                        ;CH = I
+    MOV cl, bl                        ;CL = J
+    setPointer usersAvailablePoints bh
+    setPointerFinal usersAvailablePoints bl                        
+    calculatePivot usersAvailablePoints bh bl    ;DEVUELVE EL NUMERO PIVOTE EN PIVOT NUMBER
+    MOV si, startNumberDirection
+    MOV di, finalNumberDirection
+
+    doWhile2:
+    
+    cycleForMore2:
+        MOV ah, [si]
+        INC si
+        MOV al, [si]
+        AAD
+        DEC si
+        CMP al, pivotNumber
+        JNB juniorCycle2
+        INC ch
+        ADD si, 000Bh
+        JMP cycleForMore2
+    
+    juniorCycle2:
+        MOV al, [di]
+        DEC di
+        MOV ah, [di]
+        INC di
+        AAD
+        CMP al, pivotNumber
+        JNA checkExchange2
+        DEC cl
+        SUB di, 000Bh
+        JMP juniorCycle2
+
+    checkExchange2:
+        CMP ch, cl
+        JLE preparesExchange2
+        JMP whileCheck2
+    
+    preparesExchange2:
+        SUB si, 0009h
+        SUB di, 000Ah
+        PUSH cx
+        PUSH di
+        MOV cx, 0007h
+        LEA di, usernameFromArray
+
+    saveName2:
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        LOOP saveName2
+        MOV ah, [si]
+        INC si
+        MOV al, [si]
+        AAD
+        MOV levelFromArray, al
+        INC si
+        MOV ah, [si]
+        INC si
+        MOV al, [si]
+        AAD
+        MOV scoreFromArray1, al
+        SUB si, 000Ah
+        POP di
+        POP cx
+        PUSH cx
+        MOV cx, 000Bh
+    
+    jToI2:
+        MOV al, [di]
+        MOV [si], al
+        INC si
+        INC di
+        LOOP jToI2
+        SUB si, 0002h
+        SUB di, 000Bh
+        PUSH si
+        MOV cx, 0007h
+        LEA si, usernameFromArray
+
+    iToJusername2:
+        MOV al, [si]
+        MOV [di], al
+        INC di
+        INC si
+        LOOP iToJusername2
+        MOV al, levelFromArray
+        AAM
+        MOV [di], ah
+        INC di
+        MOV [di], al
+        INC di
+        MOV al, scoreFromArray1
+        AAM
+        MOV [di], ah
+        INC di
+        MOV [di], al
+        POP si
+        POP cx
+        INC ch
+        DEC cl
+        ADD si, 000Bh
+        SUB di, 000Bh
+        PUSH cx
+        PUSH bx
+        PUSH si
+        PUSH di
+        textMode
+        graphicMode
+        frame 0000h 0010h
+        LEA bx, orderingQuickSortMsg
+        CALL chainLength
+        printGraphicMode orderingQuickSortMsg 00h 00h cx
+        getInfoCursor
+        LEA bx, timeMsg
+        CALL chainLength
+        printGraphicMode timeMsg 00h dl cx
+        graphBarReport2
+        delay varDelay
+        POP di
+        POP si
+        POP bx
+        POP cx
+
+    whileCheck2:
+        CMP ch, cl
+        JNLE checkLargeNumbers2
+        JMP doWhile2
+    
+    checkLargeNumbers2:
+        CMP bh, cl
+        JNL checkSmallNumbers2
+        PUSH si
+        PUSH di
+        PUSH cx
+        PUSH bx
+        MOV bh, bh
+        MOV bl, cl
+        CALL quickSortAscending
+        POP bx
+        POP cx
+        POP di
+        POP si
+    
+    checkSmallNumbers2:
+        CMP ch, bl
+        JNL exitProc2
+        PUSH si
+        PUSH di
+        PUSH cx
+        PUSH bx
+        MOV bh, ch
+        MOV bl, bl
+        CALL quickSortAscending
+        POP bx
+        POP cx
+        POP di
+        POP si
+    
+    exitProc2:
+        RET
+quickSortAscending endp
 
 end main
