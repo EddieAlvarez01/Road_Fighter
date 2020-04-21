@@ -72,6 +72,8 @@ startNumberDirection dw 0000
 finalIndex db 00
 finalNumberDirection dw 0000
 
+leap db 00
+
 ;--------------------------VARIABLES PARA VERIFICACION DE USUARIOS
 usernameMsg db 10, 10, 13, "Nombre de usuario: ", "$"
 passwordMsg db 10, 13, "Contrasena: ", "$"
@@ -463,8 +465,22 @@ main proc
         JMP administrationMenu
 
     shellAnimationDescending:
+        countArrayElementsGeneric usersAvailablePoints
+        MOV pivotNumber, cl
+        calculateJump usersAvailablePoints
+        shellSortDescending usersAvailablePoints
+        readCharacterVideoMode
+        textMode
+        JMP administrationMenu
 
-    shellAnimationAscending: 
+    shellAnimationAscending:
+        countArrayElements usersAvailablePoints
+        MOV pivotNumber, cl
+        calculateJump usersAvailablePoints
+        shellSortAscending usersAvailablePoints
+        readCharacterVideoMode
+        textMode
+        JMP administrationMenu
     
     showFileError:
         print fileCreationErrorMsg

@@ -1351,3 +1351,230 @@ setPointerFinal macro array, index
         POP cx
         POP si
 endm
+
+
+;-----------------------CALCULAR SALTO PARA SHELL
+calculateJump macro array
+    PUSH ax
+    PUSH bx
+    PUSH cx
+    countArrayElementsGeneric array
+    MOV ah, 00h
+    MOV al, cl
+    MOV bl, 02h
+    DIV bl
+    MOV leap, al
+    POP cx
+    POP bx
+    POP ax
+endm
+
+;----------------------METODO DE ORDENAMIENTO SHELL DESCENDENTE
+shellSortDescending macro array ;-------------------------ch = i,  bh = j   bl = k
+    LOCAL while, enterCycle, for, enterFor, while2, enterWhile2, meetsCondition, exchange, postFor, beforeCheckingWhile, exitMacro
+
+    while:
+        CMP leap, 00h
+        JA enterCycle
+        JMP exitMacro
+    
+    enterCycle:
+        MOV ch, leap
+    
+    for:
+        CMP ch, pivotNumber
+        JL enterFor
+        JMP beforeCheckingWhile
+
+    enterFor:
+        MOV bh, ch
+        SUB bh, leap
+    
+    while2:
+        CMP bh, 00h
+        JGE enterWhile2
+        JMP postFor
+
+    enterWhile2:
+        setPointer array bh
+        MOV si, startNumberDirection
+        MOV bl, bh
+        ADD bl, leap
+        setPointerFinal array bl
+        MOV di, finalNumberDirection
+        MOV ah, [si]
+        INC si
+        MOV al, [si]
+        AAD
+        DEC si
+        MOV scoreFromArray1, al
+        MOV al, [di]
+        DEC di
+        MOV ah, [di]
+        AAD
+        INC di
+        CMP scoreFromArray1, al
+        JAE meetsCondition
+        JMP exchange
+
+    meetsCondition:
+        MOV bh, 0FFh
+        JMP while2
+
+    exchange:
+        DEC di
+        MOV al, [di]
+        MOV [si], al
+        INC di
+        INC si
+        MOV al, [di]
+        MOV [si], al
+        DEC di
+        MOV al, scoreFromArray1
+        AAM
+        MOV [di], ah
+        INC di
+        MOV [di], al
+        DEC si
+        SUB bh, leap
+        PUSH si
+        PUSH di
+        PUSH cx
+        PUSH bx
+        textMode
+        graphicMode
+        frame 0000h 0010h
+        LEA bx, orderingShellSortMsg
+        CALL chainLength
+        printGraphicMode orderingShellSortMsg 00h 00h cx
+        getInfoCursor
+        LEA bx, timeMsg
+        CALL chainLength
+        printGraphicMode timeMsg 00h dl cx
+        graphBarReport2
+        delay varDelay
+        POP bx
+        POP cx
+        POP di
+        POP si
+        JMP while2
+
+    postFor:
+        INC ch
+        JMP for
+
+    beforeCheckingWhile:
+        MOV ah, 00h
+        MOV al, leap
+        MOV cl, 02h
+        DIV cl
+        MOV leap, al
+        JMP while
+    
+    exitMacro:
+endm
+
+;----------------------METODO DE ORDENAMIENTO SHELL ASCENDENTE
+shellSortAscending macro array ;-------------------------ch = i,  bh = j   bl = k
+    LOCAL while, enterCycle, for, enterFor, while2, enterWhile2, meetsCondition, exchange, postFor, beforeCheckingWhile, exitMacro
+
+    while:
+        CMP leap, 00h
+        JA enterCycle
+        JMP exitMacro
+    
+    enterCycle:
+        MOV ch, leap
+    
+    for:
+        CMP ch, pivotNumber
+        JL enterFor
+        JMP beforeCheckingWhile
+
+    enterFor:
+        MOV bh, ch
+        SUB bh, leap
+    
+    while2:
+        CMP bh, 00h
+        JGE enterWhile2
+        JMP postFor
+
+    enterWhile2:
+        setPointer array bh
+        MOV si, startNumberDirection
+        MOV bl, bh
+        ADD bl, leap
+        setPointerFinal array bl
+        MOV di, finalNumberDirection
+        MOV ah, [si]
+        INC si
+        MOV al, [si]
+        AAD
+        DEC si
+        MOV scoreFromArray1, al
+        MOV al, [di]
+        DEC di
+        MOV ah, [di]
+        AAD
+        INC di
+        CMP scoreFromArray1, al
+        JLE meetsCondition
+        JMP exchange
+
+    meetsCondition:
+        MOV bh, 0FFh
+        JMP while2
+
+    exchange:
+        DEC di
+        MOV al, [di]
+        MOV [si], al
+        INC di
+        INC si
+        MOV al, [di]
+        MOV [si], al
+        DEC di
+        MOV al, scoreFromArray1
+        AAM
+        MOV [di], ah
+        INC di
+        MOV [di], al
+        DEC si
+        SUB bh, leap
+        PUSH si
+        PUSH di
+        PUSH cx
+        PUSH bx
+        textMode
+        graphicMode
+        frame 0000h 0010h
+        LEA bx, orderingShellSortMsg
+        CALL chainLength
+        printGraphicMode orderingShellSortMsg 00h 00h cx
+        getInfoCursor
+        LEA bx, timeMsg
+        CALL chainLength
+        printGraphicMode timeMsg 00h dl cx
+        graphBarReport2
+        delay varDelay
+        POP bx
+        POP cx
+        POP di
+        POP si
+        JMP while2
+
+    postFor:
+        INC ch
+        JMP for
+
+    beforeCheckingWhile:
+        MOV ah, 00h
+        MOV al, leap
+        MOV cl, 02h
+        DIV cl
+        MOV leap, al
+        JMP while
+    
+    exitMacro:
+endm
