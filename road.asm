@@ -35,8 +35,14 @@ ordinationOption3 db 10, 13, "3) Ordenamiento ShellSort", 10, 13, "$"
 ;-------------------------VARIABLES GENERALES
 top10PtsArray db 110 dup(" "), "$"
 usersAvailablePoints db 220 dup(" "), "$"
+usersWithTimes db 240 dup(" "), "$"
+
 scoreFromArray1 db 00
 scoreFromArray2 db 00
+
+timeFromArray2 dw 0000
+timeFromArray1 dw 0000
+
 usernameFromArray db 7 dup(" "), "$"
 levelFromArray db 00
 barWidth dw 0000
@@ -56,8 +62,9 @@ colorBar db 00
 initialPosition dw 0000
 finalPosition dw 0000
 
-tenthNumber db 0
-unitNumber db 0
+hundredthNumber db 00
+tenthNumber db 00
+unitNumber db 00
 
 sortingSpeed db 00
 
@@ -73,6 +80,8 @@ finalIndex db 00
 finalNumberDirection dw 0000
 
 leap db 00
+
+numberWord dw 0000
 
 ;--------------------------VARIABLES PARA VERIFICACION DE USUARIOS
 usernameMsg db 10, 10, 13, "Nombre de usuario: ", "$"
@@ -117,6 +126,7 @@ emptyArrayMsg db 10, 10, 13, "La lista de jugadores esta vacia, no se generara e
 handle dw ?
 userFileName db "usr.txt", 00
 pointsReportFileName db "Puntos.rep", 00
+timesReportFileName db "tiempos.rep", 00
 delimiter db 59, "$"
 defaultLevel db "00", "$"
 defaultScore db "00", "$"
@@ -129,6 +139,7 @@ passwordFromFile db 4 dup(" "), "$"
 ;-------------------------REPORTES
 startDesign db 10, 10, 10, 13, "--------------------------------------------------------------------------------", "$"
 finalDesign db 10, 13, "--------------------------------------------------------------------------------", "$"
+top10TimesSign db 10, 13, "                                 Top 10 tiempos                                  ", "$"
 top10Sign db 10, 13, "                                 Top 10 puntos                                  ", "$"
 spaceBetweenNumberUser db "              ", "$"
 nameLevelSpacing db "                       ", "$"
@@ -248,6 +259,7 @@ main proc
         JMP getTop10Points
     
     jumpTop10Times:
+        JMP getTop10Times
         
     getTop10Points:
         openFile userFileName 0h
@@ -481,6 +493,43 @@ main proc
         readCharacterVideoMode
         textMode
         JMP administrationMenu
+    
+    getTop10Times:
+        openFile userFileName 0h
+        lseek 00h 0000 0000
+        readFile 01CCh readTxt
+        closeFile
+        putUsersArrayTimes
+        countArrayElementsGenericPts usersWithTimes
+        CMP cl, 00h
+        JA reportPts
+        JMP showErrorEmptyArray
+
+    reportPts:
+        createFile timesReportFileName
+        dottedOrderTimes
+        openFile timesReportFileName 01h
+        print startDesign
+        LEA bx, startDesign
+        CALL chainLength
+        writeFile cx, startDesign
+        print top10TimesSign
+        LEA bx, top10TimesSign
+        CALL chainLength
+        writeFile cx, top10TimesSign
+        top10TimesPrinting
+        print finalDesign
+        LEA bx, finalDesign
+        CALL chainLength
+        writeFile cx, finalDesign
+        closeFile
+        print pressSpaceForContinue
+
+    checkKey3:
+        getKey
+        CMP ah, 39h
+        JNE checkKey3 
+        JMP exit
     
     showFileError:
         print fileCreationErrorMsg

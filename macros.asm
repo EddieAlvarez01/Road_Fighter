@@ -174,6 +174,69 @@ putUsersArray macro
     finishFilling:
 endm
 
+;-------METER USUARIOS EN EL ARRAY CON LOS TIEMPOS
+putUsersArrayTimes macro
+    LOCAL newUserLine, comparisonThereUser, insertUser, finishFilling
+    LEA si, readTxt
+    LEA di, usersWithTimes
+    MOV bx, 0000h
+
+    newUserLine:
+        MOV cx, 0007h
+        CMP bx, 01CCh
+        JNAE comparisonThereUser
+        JMP finishFilling
+
+    comparisonThereUser: 
+        MOV al, [si]
+        CMP al, 20h
+        JNE insertUser
+        JMP finishFilling
+    
+    insertUser:
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC bx
+        INC di
+        LOOP insertUser
+        ADD si, 0006h
+        ADD bx, 0006h
+        MOV al, [si]
+        SUB al, 30h
+        MOV [di], al
+        INC si
+        INC bx
+        INC di
+        MOV al, [si]
+        SUB al, 30h
+        MOV [di], al
+        INC di
+        ADD si, 0005h
+        ADD bx, 0005h
+        MOV al, [si]
+        SUB al, 30h
+        MOV [di], al
+        INC di
+        INC si
+        INC bx
+        MOV al, [si]
+        SUB al, 30h
+        MOV [di], al
+        INC di
+        INC si
+        INC bx
+        MOV al, [si]
+        SUB al, 30h
+        MOV [di], al
+        INC di
+        ADD si, 0002h
+        ADD bx, 0002h
+        JMP newUserLine
+
+    finishFilling:
+endm
+
 ;-----------------------ORDENAR ARRAY
 dottedOrder macro
     LOCAL arrayPath, vacuumComparison, cycleIn, vacuumComparisonCycleIn, preStartCycleY, startCycleY, fillOutName, memoryExchange, memoryExchange2, increaseCycleOne, getOutBigPicture
@@ -405,6 +468,150 @@ top10Printing macro
         LEA bx, levelScoreSpacing
         CALL chainLength
         writeFile cx, levelScoreSpacing
+        POP bx
+        INC si
+        MOV bh, [si]
+        ADD bh, 30h
+        printCharacter bh
+        PUSH bx
+        MOV numberForWrite, bh
+        writeFile 0001h numberForWrite
+        POP bx
+        INC si
+        MOV bh, [si]
+        ADD bh, 30h
+        printCharacter bh
+        PUSH bx
+        MOV numberForWrite, bh
+        writeFile 0001h numberForWrite
+        POP bx
+        INC si
+        INC bl
+        JMP checkCount
+    
+    comeOutPrint:
+endm
+
+top10TimesPrinting macro
+    LOCAL checkCount, checkVoidArray, printTour, print10, printUsernameTop, comeOutPrint
+    MOV bl, 00h
+    LEA si, usersWithTimes
+
+    checkCount:
+        CMP bl, 0Ah
+        JNE checkVoidArray
+        JMP comeOutPrint
+
+    checkVoidArray:
+        MOV al, [si]
+        CMP al, 20h
+        JNE printTour
+        JMP comeOutPrint
+    
+    printTour:
+        LEA di, usernameFromArray
+        printCharacter 0Ah
+        printCharacter 0Dh
+        PUSH bx
+        writeFile 0001h newLine
+        POP bx
+        ADD bl, 01h
+        CMP bl, 0Ah
+        JE print10
+        ADD bl, 30h
+        MOV numberForWrite, bl
+        printCharacter bl
+        PUSH bx
+        writeFile 0001h numberForWrite
+        POP bx
+        printCharacter 2Eh
+        PUSH bx
+        writeFile 0001h point
+        POP bx
+        SUB bl, 30h
+        DEC bl
+        print spaceBetweenNumberUser
+        PUSH bx
+        LEA bx, spaceBetweenNumberUser
+        CALL chainLength
+        writeFile cx, spaceBetweenNumberUser
+        POP bx
+        MOV cx, 0007h
+        JMP printUsernameTop
+
+    print10:
+        MOV al, bl
+        AAM
+        ADD ah, 30h
+        ADD al, 30h
+        PUSH bx
+        MOV bh, ah
+        MOV bl, al
+        printCharacter bh
+        printCharacter bl
+        printCharacter 2Eh
+        PUSH bx
+        MOV numberForWrite, bh
+        writeFile 0001h numberForWrite
+        POP bx
+        PUSH bx
+        MOV numberForWrite, bl
+        writeFile 0001h numberForWrite
+        POP bx
+        POP bx
+        SUB bl, 01h
+        print spaceBetweenNumberUser
+        PUSH bx
+        LEA bx, spaceBetweenNumberUser
+        CALL chainLength
+        writeFile cx, spaceBetweenNumberUser
+        POP bx
+        MOV cx, 0007h
+
+    printUsernameTop:
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        LOOP printUsernameTop
+        print usernameFromArray
+        PUSH bx
+        writeFile 0007h usernameFromArray
+        POP bx
+        print nameLevelSpacing
+        PUSH bx
+        LEA bx, nameLevelSpacing
+        CALL chainLength
+        writeFile cx, nameLevelSpacing
+        POP bx
+        MOV bh, [si]
+        ADD bh, 30h
+        printCharacter bh
+        PUSH bx
+        MOV numberForWrite, bh
+        writeFile 0001h numberForWrite
+        POP bx
+        INC si
+        MOV bh, [si]
+        ADD bh, 30h
+        printCharacter bh
+        PUSH bx
+        MOV numberForWrite, bh
+        writeFile 0001h numberForWrite
+        POP bx
+        print levelScoreSpacing
+        PUSH bx
+        LEA bx, levelScoreSpacing
+        CALL chainLength
+        writeFile cx, levelScoreSpacing
+        POP bx
+        INC si
+        MOV bh, [si]
+        ADD bh, 30h
+        printCharacter bh
+        PUSH bx
+        MOV numberForWrite, bh
+        writeFile 0001h numberForWrite
         POP bx
         INC si
         MOV bh, [si]
@@ -713,7 +920,7 @@ countArrayElements macro
         POP si
 endm
 
-;---------------CONTAR ELEMENTOS GENERICO
+;---------------CONTAR ELEMENTOS GENERICO PARA PUNTEOS
 countArrayElementsGeneric macro array
     LOCAL accountPath2, exitMacro2
     PUSH si
@@ -728,6 +935,29 @@ countArrayElementsGeneric macro array
         CMP cl, 14h
         JE exitMacro2
         ADD si, 000Bh
+        INC cl
+        JMP accountPath2
+    
+    exitMacro2:
+        POP ax
+        POP si
+endm
+
+;---------------CONTAR ELEMENTOS GENERICO PARA TOP 10 TIEMPOS
+countArrayElementsGenericPts macro array
+    LOCAL accountPath2, exitMacro2
+    PUSH si
+    PUSH ax
+    MOV cl, 00h
+    LEA si, array
+
+    accountPath2:
+        MOV al, [si]
+        CMP al, 20h
+        JE exitMacro2
+        CMP cl, 14h
+        JE exitMacro2
+        ADD si, 000Ch
         INC cl
         JMP accountPath2
     
@@ -1577,4 +1807,177 @@ shellSortAscending macro array ;-------------------------ch = i,  bh = j   bl = 
         JMP while
     
     exitMacro:
+endm
+
+;-----------------------ORDENAR ARRAY POR MAYOR TIEMPO
+dottedOrderTimes macro
+    LOCAL arrayPath, vacuumComparison, cycleIn, vacuumComparisonCycleIn, preStartCycleY, startCycleY, fillOutName, memoryExchange, memoryExchange2, increaseCycleOne, getOutBigPicture
+    MOV bl, 00h
+    MOV bh, 00h
+    LEA di, usersWithTimes
+    MOV si, di
+
+    arrayPath:
+        CMP bl, 14h
+        JNE vacuumComparison
+        JMP getOutBigPicture
+    
+    vacuumComparison:
+        MOV al, [di]
+        CMP al, 20h
+        JNE cycleIn
+        JMP getOutBigPicture
+    
+    cycleIn:
+        INC bh
+        ADD si, 000Ch
+        CMP bh, 14h
+        JNE vacuumComparisonCycleIn
+        JMP increaseCycleOne
+    
+    vacuumComparisonCycleIn:
+        MOV al, [si]
+        CMP al, 20h
+        JNE preStartCycleY
+        JMP increaseCycleOne 
+
+    preStartCycleY:
+        ADD si, 09h
+        MOV al, [si]
+        MOV hundredthNumber, al
+        INC si
+        MOV al, [si]
+        MOV tenthNumber, al
+        INC si
+        MOV al, [si]
+        MOV unitNumber, al
+        form3DigitNumber hundredthNumber, tenthNumber, unitNumber
+        MOV ax, numberWord
+        MOV timeFromArray2, ax
+        ADD di, 09h
+        MOV al, [di]
+        MOV hundredthNumber, al
+        INC di
+        MOV al, [di]
+        MOV tenthNumber, al
+        INC di
+        MOV al, [di]
+        MOV unitNumber, al
+        form3DigitNumber hundredthNumber, tenthNumber, unitNumber
+        MOV ax, numberWord
+        MOV timeFromArray1, ax
+        SUB si, 000Bh
+        SUB di, 000Bh
+    
+    startCycleY:
+        MOV ax, timeFromArray1
+        CMP ax, timeFromArray2
+        JNAE stt1
+        JMP cycleIn
+
+    stt1:
+        PUSH si
+        LEA si, usernameFromArray
+        MOV cx, 0007h
+    
+    fillOutName:
+        MOV al, [di]
+        MOV [si], al
+        INC di
+        INC si
+        LOOP fillOutName
+        MOV ah, [di]
+        INC di
+        MOV al, [di]
+        AAD
+        MOV levelFromArray, al
+        SUB di, 0008h
+        MOV cx, 000Ch
+        POP si
+
+    memoryExchange:
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        LOOP memoryExchange
+        SUB di, 000Ch
+        SUB si, 000Ch
+        PUSH di
+        LEA di, usernameFromArray
+        MOV cx, 0007h
+
+    memoryExchange2:
+        MOV al, [di]
+        MOV [si], al
+        INC di
+        INC si
+        LOOP memoryExchange2
+        MOV al, levelFromArray
+        AAM
+        MOV [si], ah
+        INC si
+        MOV [si], al
+        separate3DigitNumber timeFromArray1
+        INC si
+        MOV al, hundredthNumber
+        MOV [si], al
+        INC si
+        MOV al, tenthNumber
+        MOV [si], al
+        INC si
+        MOV al, unitNumber
+        MOV [si], al
+        POP di
+        SUB si, 000Bh
+        JMP cycleIn
+
+
+    increaseCycleOne:
+        INC bl
+        ADD di, 000Ch
+        MOV si, di
+        MOV bh, bl
+        JMP arrayPath
+    
+    getOutBigPicture:
+endm
+
+;---------------------SEPARA UN NUMERO DE 3 CIFRAS   SUPONGAMOS 600   C= 6 D= 0 U = 0
+;---------------------DEVUELVE EN  c = hundrethnumber, d = tenthNUmber,  u = unitNumber
+separate3DigitNumber macro number
+    PUSH ax
+    PUSH dx
+    PUSH bx
+    MOV ax, number
+    MOV dx, 0000h
+    MOV bx, 000Ah
+    DIV bx
+    MOV unitNumber, dl
+    AAM
+    MOV hundredthNumber, ah
+    MOV tenthNumber, al
+    POP bx
+    POP dx
+    POP ax
+endm
+
+
+;-------------------UNIR 3 NUMEROS EN UN NUMERO DE 3 DIGITOS MAYOR A 255
+form3DigitNumber macro c, d, u
+    PUSH ax
+    PUSH bx
+    MOV al, c
+    MOV bl, 64h
+    MUL bl
+    MOV numberWord, ax
+    MOV al, d
+    MOV bl, 0Ah
+    MUL bl
+    ADD numberWord, ax
+    MOV al, u
+    MOV ah, 00h
+    ADD numberWord, ax
+    POP bx
+    POP ax
 endm
