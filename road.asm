@@ -554,13 +554,86 @@ main proc
         readOption
         SUB al, 30h
         CMP al, 01h
-        JE jumpToBubbleSort
+        JE jumpToBubbleSort2
         CMP al, 02h
-        JE jumpToQuickSort
+        JE jumpToQuickSort2
         CMP al, 03h
-        JE jumpToShellSort
-        JMP jumpToBubbleSort
-        JMP exit
+        JE jumpToShellSort2
+        JMP jumpToBubbleSort2
+    
+    jumpToBubbleSort2:
+        print speedInputMsg
+        readOption
+        SUB al, 30h
+        MOV sortingSpeed, al
+        JMP bubbleSort2
+
+    jumpToQuickSort2:
+
+    jumpToShellSort2:
+
+
+    bubbleSort2:
+        MOV orderingStyle, 01h
+        print upwardOption
+        print topDownOption
+        readOption
+        SUB al, 30h
+        MOV typeOfSystem, al
+        graphicMode
+        LEA bx, orderingBubbleSortMsg
+        CALL chainLength
+        printGraphicMode orderingBubbleSortMsg 00h 00h cx
+        JMP generalInstruccions2
+    
+    generalInstruccions2:
+        getInfoCursor
+        LEA bx, timeMsg
+        CALL chainLength
+        printGraphicMode timeMsg 00h dl cx
+        frame 0000h 0010h
+        graphBarReportTimes timeArray 8Eh
+
+    checkKey4:
+        getKey
+        CMP ah, 39h
+        JNE checkKey4
+        calculateDelayTime sortingSpeed
+        CMP orderingStyle, 01h
+        JE preludeBubbleAnimation2
+        CMP orderingStyle, 02h
+        JE preludeQuickAnimation2
+        CMP orderingStyle, 03h
+        JE preludeShellAnimation2
+    
+    preludeBubbleAnimation2:
+        CMP typeOfSystem, 01h
+        JE  TobubbleAnimationDescending2
+        CMP typeOfSystem, 02h
+        JE jumpTobubbleAnimationAscending2
+        JMP bubbleAnimationDescending2
+
+    preludeQuickAnimation2:
+
+    preludeShellAnimation2:
+
+    TobubbleAnimationDescending2:
+        JMP bubbleAnimationDescending2
+    
+    jumpTobubbleAnimationAscending2:
+        JMP bubbleAnimationAscending2
+
+    bubbleAnimationDescending2:
+        bubbleDescendingTimes timeArray
+        readCharacterVideoMode
+        textMode
+        JMP administrationMenu
+    
+    bubbleAnimationAscending2:
+        bubbleAscendingTimes timeArray
+        readCharacterVideoMode
+        textMode
+        JMP administrationMenu
     
     showFileError:
         print fileCreationErrorMsg

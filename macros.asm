@@ -2119,3 +2119,237 @@ graphBarReportTimes macro array, barH
     
     finishBarReport:
 endm
+
+;-------------------ORDENAMIENTO BURBUJA DESCENDENTE PARA LOS TIEMPOS
+bubbleDescendingTimes macro array
+    LOCAL arrayPath, vacuumComparison, cycleIn, vacuumComparisonCycleIn, preStartCycleY, startCycleY, memoryExchange, increaseCycleOne, getOutBigPicture
+    MOV bl, 00h
+    MOV bh, 00h
+    LEA di, array
+    MOV si, di
+
+    arrayPath:
+        CMP bl, 14h
+        JNE vacuumComparison
+        JMP getOutBigPicture
+    
+    vacuumComparison:
+        MOV al, [di]
+        CMP al, 20h
+        JNE cycleIn
+        JMP getOutBigPicture
+    
+    cycleIn:
+        INC bh
+        ADD si, 0003h
+        CMP bh, 14h
+        JNE vacuumComparisonCycleIn
+        JMP increaseCycleOne
+    
+    vacuumComparisonCycleIn:
+        MOV al, [si]
+        CMP al, 20h
+        JNE preStartCycleY
+        JMP increaseCycleOne 
+
+    preStartCycleY:
+        MOV al, [si]
+        MOV hundredthNumber, al
+        INC si
+        MOV al, [si]
+        MOV tenthNumber, al
+        INC si
+        MOV al, [si]
+        MOV unitNumber, al
+        form3DigitNumber hundredthNumber, tenthNumber, unitNumber
+        MOV ax, numberWord
+        MOV timeFromArray2, ax
+        MOV al, [di]
+        MOV hundredthNumber, al
+        INC di
+        MOV al, [di]
+        MOV tenthNumber, al
+        INC di
+        MOV al, [di]
+        MOV unitNumber, al
+        form3DigitNumber hundredthNumber, tenthNumber, unitNumber
+        MOV ax, numberWord
+        MOV timeFromArray1, ax
+        SUB si, 0002h
+        SUB di, 0002h
+    
+    startCycleY:
+        MOV ax, timeFromArray1
+        CMP ax, timeFromArray2
+        JNAE memoryExchange
+        JMP cycleIn
+
+    memoryExchange:
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        MOV al, [si]
+        MOV [di], al
+        SUB di, 0002h
+        SUB si, 0002h
+        separate3DigitNumber timeFromArray1
+        MOV al, hundredthNumber
+        MOV [si], al
+        INC si
+        MOV al, tenthNumber
+        MOV [si], al
+        INC si
+        MOV al, unitNumber
+        MOV [si], al
+        SUB si, 0002h
+        PUSH bx
+        PUSH si
+        PUSH di
+        textMode
+        graphicMode
+        frame 0000h 0010h
+        LEA bx, orderingBubbleSortMsg
+        CALL chainLength
+        printGraphicMode orderingBubbleSortMsg 00h 00h cx
+        getInfoCursor
+        LEA bx, timeMsg
+        CALL chainLength
+        printGraphicMode timeMsg 00h dl cx
+        graphBarReportTimes array 8Eh
+        delay varDelay
+        POP di
+        POP si
+        POP bx
+        JMP cycleIn
+
+    increaseCycleOne:
+        INC bl
+        ADD di, 0003h
+        MOV si, di
+        MOV bh, bl
+        JMP arrayPath
+    
+    getOutBigPicture:
+endm
+
+;-------------------ORDENAMIENTO BURBUJA ASCENDENTE PARA LOS TIEMPOS
+bubbleAscendingTimes macro array
+    LOCAL arrayPath, vacuumComparison, cycleIn, vacuumComparisonCycleIn, preStartCycleY, startCycleY, memoryExchange, increaseCycleOne, getOutBigPicture
+    MOV bl, 00h
+    MOV bh, 00h
+    LEA di, array
+    MOV si, di
+
+    arrayPath:
+        CMP bl, 14h
+        JNE vacuumComparison
+        JMP getOutBigPicture
+    
+    vacuumComparison:
+        MOV al, [di]
+        CMP al, 20h
+        JNE cycleIn
+        JMP getOutBigPicture
+    
+    cycleIn:
+        INC bh
+        ADD si, 0003h
+        CMP bh, 14h
+        JNE vacuumComparisonCycleIn
+        JMP increaseCycleOne
+    
+    vacuumComparisonCycleIn:
+        MOV al, [si]
+        CMP al, 20h
+        JNE preStartCycleY
+        JMP increaseCycleOne 
+
+    preStartCycleY:
+        MOV al, [si]
+        MOV hundredthNumber, al
+        INC si
+        MOV al, [si]
+        MOV tenthNumber, al
+        INC si
+        MOV al, [si]
+        MOV unitNumber, al
+        form3DigitNumber hundredthNumber, tenthNumber, unitNumber
+        MOV ax, numberWord
+        MOV timeFromArray2, ax
+        MOV al, [di]
+        MOV hundredthNumber, al
+        INC di
+        MOV al, [di]
+        MOV tenthNumber, al
+        INC di
+        MOV al, [di]
+        MOV unitNumber, al
+        form3DigitNumber hundredthNumber, tenthNumber, unitNumber
+        MOV ax, numberWord
+        MOV timeFromArray1, ax
+        SUB si, 0002h
+        SUB di, 0002h
+    
+    startCycleY:
+        MOV ax, timeFromArray1
+        CMP ax, timeFromArray2
+        JNBE memoryExchange
+        JMP cycleIn
+
+    memoryExchange:
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        MOV al, [si]
+        MOV [di], al
+        SUB di, 0002h
+        SUB si, 0002h
+        separate3DigitNumber timeFromArray1
+        MOV al, hundredthNumber
+        MOV [si], al
+        INC si
+        MOV al, tenthNumber
+        MOV [si], al
+        INC si
+        MOV al, unitNumber
+        MOV [si], al
+        SUB si, 0002h
+        PUSH bx
+        PUSH si
+        PUSH di
+        textMode
+        graphicMode
+        frame 0000h 0010h
+        LEA bx, orderingBubbleSortMsg
+        CALL chainLength
+        printGraphicMode orderingBubbleSortMsg 00h 00h cx
+        getInfoCursor
+        LEA bx, timeMsg
+        CALL chainLength
+        printGraphicMode timeMsg 00h dl cx
+        graphBarReportTimes array 8Eh
+        delay varDelay
+        POP di
+        POP si
+        POP bx
+        JMP cycleIn
+
+    increaseCycleOne:
+        INC bl
+        ADD di, 0003h
+        MOV si, di
+        MOV bh, bl
+        JMP arrayPath
+    
+    getOutBigPicture:
+endm
