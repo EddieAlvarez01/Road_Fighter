@@ -36,6 +36,7 @@ ordinationOption3 db 10, 13, "3) Ordenamiento ShellSort", 10, 13, "$"
 top10PtsArray db 110 dup(" "), "$"
 usersAvailablePoints db 220 dup(" "), "$"
 usersWithTimes db 240 dup(" "), "$"
+timeArray db 60 dup(" "), "$"
 
 scoreFromArray1 db 00
 scoreFromArray2 db 00
@@ -82,6 +83,7 @@ finalNumberDirection dw 0000
 leap db 00
 
 numberWord dw 0000
+maximunTime dw 0000
 
 ;--------------------------VARIABLES PARA VERIFICACION DE USUARIOS
 usernameMsg db 10, 10, 13, "Nombre de usuario: ", "$"
@@ -529,6 +531,35 @@ main proc
         getKey
         CMP ah, 39h
         JNE checkKey3 
+        JMP barCalculation2
+
+    barCalculation2:
+        countArrayElementsGenericPts usersWithTimes
+        MOV ch, 00h
+        MOV barTotal, cx
+        DEC cl
+        barWidthCalculation cl
+        getTopTime usersWithTimes
+        graphicMode
+        frame 0000h 0000h
+        fillTimeArray
+        graphBarReportTimes timeArray 9Eh
+        readCharacterVideoMode
+        textMode
+
+    ordersMenu2:
+        print ordinationOption1
+        print ordinationOption2
+        print ordinationOption3
+        readOption
+        SUB al, 30h
+        CMP al, 01h
+        JE jumpToBubbleSort
+        CMP al, 02h
+        JE jumpToQuickSort
+        CMP al, 03h
+        JE jumpToShellSort
+        JMP jumpToBubbleSort
         JMP exit
     
     showFileError:

@@ -1035,6 +1035,27 @@ getTopScore macro
     POP si
 endm
 
+;------------SACAR EL TIEMPO MAXIMO 100%
+getTopTime macro array
+    PUSH si
+    PUSH ax
+    LEA si, usersWithTimes
+    ADD si, 0009h
+    MOV al, [si]
+    MOV hundredthNumber, al
+    INC si
+    MOV al, [si]
+    MOV tenthNumber, al
+    INC si
+    MOV al, [si]
+    MOV unitNumber, al
+    form3DigitNumber hundredthNumber, tenthNumber, unitNumber
+    MOV ax, numberWord
+    MOV maximunTime, ax
+    POP ax
+    POP si
+endm
+
 ;------------------ CALCULA LA ALTURA DE LA BARRA
 calculateBarHeight macro heigth
     PUSH ax
@@ -1061,6 +1082,33 @@ calculateBarHeight macro heigth
     POP dx
     POP bx
     POP ax 
+endm
+
+;---------------------- CALCULAR LA ALTURA DE LA BARRA PARA LOS TIEMPOS
+calculateBarHeight2 macro heigth
+    PUSH ax
+    PUSH bx
+    PUSH dx
+    MOV ax, numberWord
+    MOV bl, 64h
+    MOV bh, 00h
+    MUL bx
+    MOV bx, maximunTime
+    DIV bx
+    MOV bl, heigth
+    MUL bl
+    MOV dx, 0000h
+    MOV bx, 0064h
+    DIV bx
+    MOV bl, 0A8h
+    MOV ah, 00h
+    MOV downwardTravel, ax
+    SUB bl, al
+    MOV bh, 00h
+    MOV barHeigth, bx
+    POP dx
+    POP bx
+    POP ax
 endm
 
 ;----------------CALCULAR COLOR
@@ -1980,4 +2028,94 @@ form3DigitNumber macro c, d, u
     ADD numberWord, ax
     POP bx
     POP ax
+endm
+
+;---------------------LLENA EL ARRAY UNICAMENTE DE TIEMPOS PARA LA GRAFICACION DE LAS BARRAS
+fillTimeArray macro array
+    LOCAL newUserLine, comparisonThereUser, insertUser, finishFilling
+    LEA si, readTxt
+    LEA di, timeArray
+    MOV bx, 0000h
+
+    newUserLine:
+        ADD si, 0013h
+        ADD bx, 0013h
+        CMP bx, 01CCh
+        JNAE comparisonThereUser
+        JMP finishFilling
+
+    comparisonThereUser: 
+        MOV al, [si]
+        CMP al, 20h
+        JNE insertUser
+        JMP finishFilling
+    
+    insertUser:
+        MOV al, [si]
+        SUB al, 30h
+        MOV [di], al
+        INC si
+        INC bx
+        INC di
+        MOV al, [si]
+        SUB al, 30h
+        MOV [di], al
+        INC si
+        INC bx
+        INC di
+        MOV al, [si]
+        SUB al, 30h
+        MOV [di], al
+        INC di
+        ADD si, 0002h
+        ADD bx, 0002h
+        JMP newUserLine
+
+    finishFilling:
+endm
+
+;-------------------------GRAFICAR BARRAS DE TIEMPOS
+graphBarReportTimes macro array, barH
+    LOCAL totalBarComparison, finishBarReport, continueBar
+    MOV bx, 0000h
+    LEA si, array
+    MOV coordenateXVideoMode, 0012h
+    MOV coordenateXCursor, 16h
+
+    totalBarComparison:
+        CMP bx, barTotal
+        JNE continueBar
+        JMP finishBarReport
+
+    continueBar:
+        MOV al, [si]
+        MOV hundredthNumber, al
+        INC si
+        MOV al, [si]
+        MOV tenthNumber, al
+        INC si
+        MOV al, [si]
+        MOV unitNumber, al
+        form3DigitNumber hundredthNumber tenthNumber unitNumber
+        calculateBarHeight2 barH
+        setBarColor numberWord
+        MOV cx, coordenateXVideoMode
+        MOV initialPosition, cx
+        plotBar colorBar, barWidth, barHeigth
+        MOV cx, coordenateXVideoMode
+        MOV finalPosition, cx
+        calculateBarNumberPosition
+        ADD hundredthNumber, 30h
+        ADD tenthNumber, 30h
+        ADD unitNumber, 30h
+        printCharacterVideoMode hundredthNumber
+        printCharacterVideoMode tenthNumber
+        printCharacterVideoMode unitNumber
+        ADD coordenateXVideoMode, 0008h
+        INC si
+        ADD coordenateYCursor, 04h
+        INC bx
+        JMP totalBarComparison
+    
+    finishBarReport:
 endm
