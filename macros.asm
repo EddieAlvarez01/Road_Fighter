@@ -1552,6 +1552,30 @@ calculateFinalArray macro array
         POP cx
 endm
 
+;------------CALCULAR EL FINAL DEL ARRAY DE NUMEROS
+calculateFinalArrayTime macro array
+    LOCAL cycle, exitMacro
+    PUSH cx
+    PUSH si
+    countArrayElementsGenericPts usersWithTimes
+    DEC cl
+    MOV finalIndex, cl
+    LEA si, array
+    MOV cl, 00h
+
+    cycle:
+        MOV finalNumberDirection, si
+        CMP cl, finalIndex
+        JE exitMacro
+        INC cl
+        ADD si, 0003h
+        JMP cycle
+    
+    exitMacro:
+        POP si
+        POP cx
+endm
+
 ;---------CALCULAR PIVOTE DE UN ARREGLO O RECORTE DE ARREGLO
 calculatePivot macro array, start, final
     LOCAL cycle, exitMacro
@@ -1587,6 +1611,46 @@ calculatePivot macro array, start, final
         POP ax
 endm
 
+;---------CALCULAR PIVOTE DE UN ARREGLO O RECORTE DE ARREGLO
+calculatePivotTime macro array, start, final
+    LOCAL cycle, exitMacro
+    PUSH ax
+    PUSH si
+    PUSH cx
+    PUSH bx
+    MOV al, start
+    ADD al, final
+    MOV ah, 00h
+    MOV bl, 02h
+    DIV bl
+    LEA si, array
+    MOV cl, 00h
+
+    cycle:
+        CMP cl, al
+        JE exitMacro
+        INC cl
+        ADD si, 0003h
+        JMP cycle
+    
+    exitMacro:
+        MOV al, [si]
+        MOV hundredthNumber, al
+        INC si
+        MOV al, [si]
+        MOV tenthNumber, al
+        INC si
+        MOV al, [si]
+        MOV unitNumber, al
+        form3DigitNumber hundredthNumber tenthNumber unitNumber
+        MOV ax, numberWord
+        MOV pivotNumberTime, ax
+        POP bx
+        POP cx
+        POP si
+        POP ax
+endm
+
 ;----------------------MOVER PUNTERO DEL INICIO
 setPointer macro array, index
     LOCAL cycle, exitMacro
@@ -1609,6 +1673,27 @@ setPointer macro array, index
         POP si
 endm
 
+;------------------- MOVER PUNTERO DESDE EL INDICE INICIAL HACIA LA POSICION DE MEMORIA QUE REPRESENTA
+setPointerTime macro array, index
+    LOCAL cycle, exitMacro
+    PUSH si
+    PUSH cx
+    LEA si, array
+    MOV cl, 00h
+    
+    cycle:
+        CMP cl, index
+        JE exitMacro
+        INC cl
+        ADD si, 0003h
+        JMP cycle
+
+    exitMacro:
+        MOV startNumberDirection, si
+        POP cx
+        POP si
+endm
+
 setPointerFinal macro array, index
     LOCAL cycle, exitMacro
     PUSH si
@@ -1622,6 +1707,27 @@ setPointerFinal macro array, index
         JE exitMacro
         INC cl
         ADD si, 000Bh
+        JMP cycle
+    
+    exitMacro:
+        MOV finalNumberDirection, si
+        POP cx
+        POP si
+endm
+
+;----------------------CALCULAR EL SEGUNDO NUMERO (SU POSICION DE MEMORIA)
+setPointerFinalTime macro array, index
+    LOCAL cycle, exitMacro
+    PUSH si
+    PUSH cx
+    LEA si, array
+    MOV cl, 00h
+
+    cycle:
+        CMP cl, index
+        JE exitMacro
+        INC cl
+        ADD si, 0003h
         JMP cycle
     
     exitMacro:

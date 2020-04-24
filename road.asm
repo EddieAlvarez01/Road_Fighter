@@ -76,6 +76,7 @@ orderingStyle db 00
 varDelay dw 0000
 
 pivotNumber db 00
+pivotNumberTime dw 0000
 startNumberDirection dw 0000
 finalIndex db 00
 finalNumberDirection dw 0000
@@ -569,6 +570,11 @@ main proc
         JMP bubbleSort2
 
     jumpToQuickSort2:
+        print speedInputMsg
+        readOption
+        SUB al, 30h
+        MOV sortingSpeed, al
+        JMP quickSort2
 
     jumpToShellSort2:
 
@@ -584,6 +590,19 @@ main proc
         LEA bx, orderingBubbleSortMsg
         CALL chainLength
         printGraphicMode orderingBubbleSortMsg 00h 00h cx
+        JMP generalInstruccions2
+
+    quickSort2:
+        MOV orderingStyle, 02h
+        print upwardOption
+        print topDownOption
+        readOption
+        SUB al, 30h
+        MOV typeOfSystem, al
+        graphicMode
+        LEA bx, orderingQuickSortMsg
+        CALL chainLength
+        printGraphicMode orderingQuickSortMsg 00h 00h cx
         JMP generalInstruccions2
     
     generalInstruccions2:
@@ -614,6 +633,11 @@ main proc
         JMP bubbleAnimationDescending2
 
     preludeQuickAnimation2:
+        CMP typeOfSystem, 01h
+        JE jumpToquickAnimationDescending2
+        CMP typeOfSystem, 02h
+        JE jumpToquickAnimationAscending2
+        JMP quickAnimationDescending2
 
     preludeShellAnimation2:
 
@@ -623,6 +647,12 @@ main proc
     jumpTobubbleAnimationAscending2:
         JMP bubbleAnimationAscending2
 
+    jumpToquickAnimationDescending2:
+        JMP quickAnimationDescending2
+    
+    jumpToquickAnimationAscending2:
+        JMP quickAnimationAscending2
+
     bubbleAnimationDescending2:
         bubbleDescendingTimes timeArray
         readCharacterVideoMode
@@ -631,6 +661,24 @@ main proc
     
     bubbleAnimationAscending2:
         bubbleAscendingTimes timeArray
+        readCharacterVideoMode
+        textMode
+        JMP administrationMenu
+    
+    quickAnimationDescending2:
+        calculateFinalArrayTime timeArray
+        MOV bh, 00h
+        MOV bl, finalIndex
+        CALL quickSortDescendingTimes
+        readCharacterVideoMode
+        textMode
+        JMP administrationMenu
+
+    quickAnimationAscending2:
+        calculateFinalArrayTime timeArray
+        MOV bh, 00h
+        MOV bl, finalIndex
+        CALL quickSortAscendingTimes
         readCharacterVideoMode
         textMode
         JMP administrationMenu
@@ -1203,5 +1251,283 @@ quickSortAscending proc near
     exitProc2:
         RET
 quickSortAscending endp
+
+;----------------------ORDENA EL ARRAY CON QUICKSORT DE FORMA DESCENDENTE  ARRAY = EL ARRAY A ORDENAR  (BH) SE LE PASA EL PRIMERO, 
+;(BL) EL ULTIMO
+quickSortDescendingTimes proc near
+    MOV ch, bh                        ;CH = I
+    MOV cl, bl                        ;CL = J
+    setPointerTime timeArray bh
+    setPointerFinalTime timeArray bl                        
+    calculatePivotTime timeArray bh bl    ;DEVUELVE EL NUMERO PIVOTE
+    MOV si, startNumberDirection
+    MOV di, finalNumberDirection
+
+    doWhile3:
+    
+    cycleForMore3:
+        MOV al, [si]
+        MOV hundredthNumber, al
+        INC si
+        MOV al, [si]
+        MOV tenthNumber, al
+        INC si
+        MOV al, [si]
+        MOV unitNumber, al
+        form3DigitNumber hundredthNumber tenthNumber unitNumber
+        MOV ax, numberWord
+        SUB si, 0002h
+        CMP ax, pivotNumberTime
+        JNA juniorCycle3
+        INC ch
+        ADD si, 0003h
+        JMP cycleForMore3
+    
+    juniorCycle3:
+        MOV al, [di]
+        MOV hundredthNumber, al
+        INC di
+        MOV al, [di]
+        MOV tenthNumber, al
+        INC di
+        MOV al, [di]
+        MOV unitNumber, al
+        form3DigitNumber hundredthNumber tenthNumber unitNumber
+        MOV ax, numberWord
+        SUB di, 0002h
+        CMP ax, pivotNumberTime
+        JNB checkExchange3
+        DEC cl
+        SUB di, 0003h
+        JMP juniorCycle3
+
+    checkExchange3:
+        CMP ch, cl
+        JLE memoryExchange
+        JMP whileCheck3
+    
+    memoryExchange:
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        MOV al, [si]
+        MOV [di], al
+        SUB di, 0002h
+        SUB si, 0002h
+        MOV al, hundredthNumber
+        MOV [si], al
+        INC si
+        MOV al, tenthNumber
+        MOV [si], al
+        INC si
+        MOV al, unitNumber
+        MOV [si], al
+        INC ch
+        DEC cl
+        INC si
+        SUB di, 0003h 
+        PUSH cx
+        PUSH bx
+        PUSH si
+        PUSH di
+        textMode
+        graphicMode
+        frame 0000h 0010h
+        LEA bx, orderingQuickSortMsg
+        CALL chainLength
+        printGraphicMode orderingQuickSortMsg 00h 00h cx
+        getInfoCursor
+        LEA bx, timeMsg
+        CALL chainLength
+        printGraphicMode timeMsg 00h dl cx
+        graphBarReportTimes timeArray 8Eh
+        delay varDelay
+        POP di
+        POP si
+        POP bx
+        POP cx
+
+    whileCheck3:
+        CMP ch, cl
+        JNLE checkLargeNumbers3
+        JMP doWhile3
+    
+    checkLargeNumbers3:
+        CMP bh, cl
+        JNL checkSmallNumbers3
+        PUSH si
+        PUSH di
+        PUSH cx
+        PUSH bx
+        MOV bh, bh
+        MOV bl, cl
+        CALL quickSortDescendingTimes
+        POP bx
+        POP cx
+        POP di
+        POP si
+    
+    checkSmallNumbers3:
+        CMP ch, bl
+        JNL exitProc3
+        PUSH si
+        PUSH di
+        PUSH cx
+        PUSH bx
+        MOV bh, ch
+        MOV bl, bl
+        CALL quickSortDescendingTimes
+        POP bx
+        POP cx
+        POP di
+        POP si
+    
+    exitProc3:
+        RET
+quickSortDescendingTimes endp
+
+;----------------------ORDENA EL ARRAY CON QUICKSORT DE FORMA ASCENDENTE  ARRAY = EL ARRAY A ORDENAR  (BH) SE LE PASA EL PRIMERO, 
+;(BL) EL ULTIMO
+quickSortAscendingTimes proc near
+    MOV ch, bh                        ;CH = I
+    MOV cl, bl                        ;CL = J
+    setPointerTime timeArray bh
+    setPointerFinalTime timeArray bl                        
+    calculatePivotTime timeArray bh bl    ;DEVUELVE EL NUMERO PIVOTE
+    MOV si, startNumberDirection
+    MOV di, finalNumberDirection
+
+    doWhile4:
+    
+    cycleForMore4:
+        MOV al, [si]
+        MOV hundredthNumber, al
+        INC si
+        MOV al, [si]
+        MOV tenthNumber, al
+        INC si
+        MOV al, [si]
+        MOV unitNumber, al
+        form3DigitNumber hundredthNumber tenthNumber unitNumber
+        MOV ax, numberWord
+        SUB si, 0002h
+        CMP ax, pivotNumberTime
+        JNB juniorCycle4
+        INC ch
+        ADD si, 0003h
+        JMP cycleForMore4
+    
+    juniorCycle4:
+        MOV al, [di]
+        MOV hundredthNumber, al
+        INC di
+        MOV al, [di]
+        MOV tenthNumber, al
+        INC di
+        MOV al, [di]
+        MOV unitNumber, al
+        form3DigitNumber hundredthNumber tenthNumber unitNumber
+        MOV ax, numberWord
+        SUB di, 0002h
+        CMP ax, pivotNumberTime
+        JNA checkExchange4
+        DEC cl
+        SUB di, 0003h
+        JMP juniorCycle4
+
+    checkExchange4:
+        CMP ch, cl
+        JLE memoryExchange2
+        JMP whileCheck4
+    
+    memoryExchange2:
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        MOV al, [si]
+        MOV [di], al
+        INC si
+        INC di
+        MOV al, [si]
+        MOV [di], al
+        SUB di, 0002h
+        SUB si, 0002h
+        MOV al, hundredthNumber
+        MOV [si], al
+        INC si
+        MOV al, tenthNumber
+        MOV [si], al
+        INC si
+        MOV al, unitNumber
+        MOV [si], al
+        INC ch
+        DEC cl
+        INC si
+        SUB di, 0003h 
+        PUSH cx
+        PUSH bx
+        PUSH si
+        PUSH di
+        textMode
+        graphicMode
+        frame 0000h 0010h
+        LEA bx, orderingQuickSortMsg
+        CALL chainLength
+        printGraphicMode orderingQuickSortMsg 00h 00h cx
+        getInfoCursor
+        LEA bx, timeMsg
+        CALL chainLength
+        printGraphicMode timeMsg 00h dl cx
+        graphBarReportTimes timeArray 8Eh
+        delay varDelay
+        POP di
+        POP si
+        POP bx
+        POP cx
+
+    whileCheck4:
+        CMP ch, cl
+        JNLE checkLargeNumbers4
+        JMP doWhile4
+    
+    checkLargeNumbers4:
+        CMP bh, cl
+        JNL checkSmallNumbers4
+        PUSH si
+        PUSH di
+        PUSH cx
+        PUSH bx
+        MOV bh, bh
+        MOV bl, cl
+        CALL quickSortAscendingTimes
+        POP bx
+        POP cx
+        POP di
+        POP si
+    
+    checkSmallNumbers4:
+        CMP ch, bl
+        JNL exitProc4
+        PUSH si
+        PUSH di
+        PUSH cx
+        PUSH bx
+        MOV bh, ch
+        MOV bl, bl
+        CALL quickSortAscendingTimes
+        POP bx
+        POP cx
+        POP di
+        POP si
+    
+    exitProc4:
+        RET
+quickSortAscendingTimes endp
 
 end main
