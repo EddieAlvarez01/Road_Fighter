@@ -577,7 +577,11 @@ main proc
         JMP quickSort2
 
     jumpToShellSort2:
-
+        print speedInputMsg
+        readOption
+        SUB al, 30h
+        MOV sortingSpeed, al
+        JMP shellSort2
 
     bubbleSort2:
         MOV orderingStyle, 01h
@@ -604,6 +608,18 @@ main proc
         CALL chainLength
         printGraphicMode orderingQuickSortMsg 00h 00h cx
         JMP generalInstruccions2
+
+    shellSort2:
+        MOV orderingStyle, 03h
+        print upwardOption
+        print topDownOption
+        readOption
+        SUB al, 30h
+        MOV typeOfSystem, al
+        graphicMode
+        LEA bx, orderingShellSortMsg
+        CALL chainLength
+        printGraphicMode orderingShellSortMsg 00h 00h cx
     
     generalInstruccions2:
         getInfoCursor
@@ -640,6 +656,11 @@ main proc
         JMP quickAnimationDescending2
 
     preludeShellAnimation2:
+        CMP typeOfSystem, 01h
+        JE jumpToshellAnimationDescending2
+        CMP typeOfSystem, 02h
+        JE jumpToshellAnimationAscending2
+        JMP shellAnimationDescending2
 
     TobubbleAnimationDescending2:
         JMP bubbleAnimationDescending2
@@ -652,6 +673,12 @@ main proc
     
     jumpToquickAnimationAscending2:
         JMP quickAnimationAscending2
+
+    jumpToshellAnimationDescending2:
+        JMP shellAnimationDescending2
+
+    jumpToshellAnimationAscending2:
+        JMP shellAnimationAscending2
 
     bubbleAnimationDescending2:
         bubbleDescendingTimes timeArray
@@ -679,6 +706,24 @@ main proc
         MOV bh, 00h
         MOV bl, finalIndex
         CALL quickSortAscendingTimes
+        readCharacterVideoMode
+        textMode
+        JMP administrationMenu
+    
+    shellAnimationDescending2:
+        countArrayElementsGenericPts usersWithTimes
+        MOV pivotNumber, cl
+        calculateJumpTimes usersWithTimes
+        shellSortDescendingTime timeArray
+        readCharacterVideoMode
+        textMode
+        JMP administrationMenu
+
+    shellAnimationAscending2:
+        countArrayElementsGenericPts usersWithTimes
+        MOV pivotNumber, cl
+        calculateJumpTimes usersWithTimes
+        shellSortAscendingTime timeArray
         readCharacterVideoMode
         textMode
         JMP administrationMenu
