@@ -86,6 +86,65 @@ leap db 00
 numberWord dw 0000
 maximunTime dw 0000
 
+levelTime db 3 dup(0), "$"
+obstacleTime db 3 dup(0), "$"
+awardTime db 3 dup(0), "$"
+obstaclePoints db 2 dup(0), "$"
+awardPoints db 2 dup(0), "$"
+
+nameLevel1 db 6 dup(0), "$"
+timeLevel1 dw 0000
+obstacleTimeLevel1 dw 0000
+awardTimeLevel1 dw 0000
+obstaclePointsLevel1 dw 0000
+awardPointsLevel1 dw 0000
+colorLevel1 db 6 dup(0), "$"
+
+nameLevel2 db 6 dup(0), "$"
+timeLevel2 dw 0000
+obstacleTimeLevel2 dw 0000
+awardTimeLevel2 dw 0000
+obstaclePointsLevel2 dw 0000
+awardPointsLevel2 dw 0000
+colorLevel2 db 6 dup(0), "$"
+
+nameLevel3 db 6 dup(0), "$"
+timeLevel3 dw 0000
+obstacleTimeLevel3 dw 0000
+awardTimeLevel3 dw 0000
+obstaclePointsLevel3 dw 0000
+awardPointsLevel3 dw 0000
+colorLevel3 db 6 dup(0), "$"
+
+nameLevel4 db 6 dup(0), "$"
+timeLevel4 dw 0000
+obstacleTimeLevel4 dw 0000
+awardTimeLevel4 dw 0000
+obstaclePointsLevel4 dw 0000
+awardPointsLevel4 dw 0000
+colorLevel4 db 6 dup(0), "$"
+
+nameLevel5 db 6 dup(0), "$"
+timeLevel5 dw 0000
+obstacleTimeLevel5 dw 0000
+awardTimeLevel5 dw 0000
+obstaclePointsLevel5 dw 0000
+awardPointsLevel5 dw 0000
+colorLevel5 db 6 dup(0), "$"
+
+nameLevel6 db 6 dup(0), "$"
+timeLevel6 dw 0000
+obstacleTimeLevel6 dw 0000
+awardTimeLevel6 dw 0000
+obstaclePointsLevel6 dw 0000
+awardPointsLevel6 dw 0000
+colorLevel6 db 6 dup(0), "$"
+
+nameFileLoad db 20 dup(0), "$"
+readGameLoad db 156 dup (" "), "$"
+
+validDigits db 00
+
 ;--------------------------VARIABLES PARA VERIFICACION DE USUARIOS
 usernameMsg db 10, 10, 13, "Nombre de usuario: ", "$"
 passwordMsg db 10, 13, "Contrasena: ", "$"
@@ -100,6 +159,7 @@ numberForWrite db 00
 pressAKeyMsg db 10, 13, "Presiona una tecla para continuar....", "$"
 registeredUserMsg db 10, 13, "Usuario registrado correctamente", "$"
 pressSpaceForContinue db 10, 13, "Presiona espacio para continuar..", "$"
+fileMessageReadSuccessfully db 10, 13, "Archivo leido exitosamente", "$"
 
 orderingBubbleSortMsg db "ORDENAMIENTO: BUBBLESORT ", "$"
 orderingQuickSortMsg db "ORDENAMIENTO: QUICKSORT ", "$"
@@ -111,13 +171,15 @@ speedMsg db "VELOCIDAD: ", "$"
 
 speedInputMsg db 10, 10, 13, "INGRESE UNA VELOCIDAD (0-9)", 10, 13, "$"
 
+enterFileNameMsg db 10, 10, 13, "Ingrese el nombre del archivo a cargar: ", "$" 
+
 ;-------------------------MENU DE TIPO DE ORDENADO
 upwardOption db 10, 10, 13, "1) Descendente", "$"
 topDownOption db 10, 13, "2) Ascendente", 10, 13, "$"
 
 ;-------------------------MENSAJES DE ERROR
 passwordErrorIncorrectSyntax db 10, 10, 13, "Error la contrasena debe ser de 4 numeros unicamente", "$"
-errorOpeningFileMsg db 10, 10, 13, "Error al escribir el archivo", "$"
+errorOpeningFileMsg db 10, 10, 13, "Error al leer el archivo", "$"
 fileCreationErrorMsg db 10, 10, 13, "Error no se puede crear el archivo", "$"
 fseekErrorMsg db 10, 10, 13, "Error no se puede desplazar el puntero", "$"
 writeFileErrorMsg db 10, 10, 13, "Error no se puede escribir en archivo", "$"
@@ -256,14 +318,38 @@ main proc
         print menuUserOption2
         print menuUserOption3
         readOption
-        JMP mainMenu
+        SUB al, 30h
+        CMP al, 01h
+        JE jumpPlay
+        CMP al, 02h
+        JE jumpLoadFile
+        JMP administrationMenu
 
     jumpTop10Points:
         JMP getTop10Points
     
     jumpTop10Times:
         JMP getTop10Times
-        
+
+    jumpPlay:
+        JMP playGame
+
+    jumpLoadFile:
+        JMP loadFile
+
+    playGame:
+
+    loadFile:
+        print enterFileNameMsg
+        readChain 0014h nameFileLoad    ;LEER UNA CADENA PARA EL NOMBRE DEL ARCHIVO A CARGAR
+        chainClean 0014h nameFileLoad   ;LIMPIAR LA CADENA LEIDA DE LOS SALTOS DE LINEA Y RETORNOS DE CARRO
+        openFile nameFileLoad 00h       ;ABRIMOS EL ARCHIVO
+        readFile 009Ch readGameLoad     ;LEER EL CONTENIDO
+        closeFile         ;CERRAR EL ARCHIVO
+        loadLevels        ;DEL STRING LEIDO CARGAR A LOS RESPECTIVOS NIVELES
+        print fileMessageReadSuccessfully
+        JMP exit
+
     getTop10Points:
         openFile userFileName 0h
         lseek 00h 0000 0000

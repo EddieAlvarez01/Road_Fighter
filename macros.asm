@@ -646,16 +646,23 @@ endm
 graphicMode macro
     MOV ax, 0013h     ;   RESOLUCION: 320 * 200
     INT 10h
-    ;MOV ax, 0A000h
-    ;MOV ds, ax
+endm
+
+;-----------------------PASAR MEMORIA DE VIDEO
+videoMemory macro
+    MOV ax, 0A000h
+    MOV ds, ax
 endm
 
 ;----------ENTRAR AL MODO TEXTO
 textMode macro
     MOV ax, 0003h
     INT 10h
-    ;MOV ax, @data
-    ;MOV ds, ax
+endm
+
+passDataSegment macro
+    MOV ax, @data
+    MOV ds, ax
 endm
 
 ;----------CALCULAR PIXELES POR BARRA (ANCHO)
@@ -2724,4 +2731,685 @@ shellSortAscendingTime macro array ;-------------------------ch = i,  bh = j   b
         JMP while
     
     exitMacro:
+endm
+
+;-----------------------------LIMPIAR CADENAS LEIDAS DEL SALTO DE LINEA Y/0 RETORNO DE CARRO
+chainClean macro length, chain
+    LOCAL cycle, exchange, jumpCycle
+    PUSH cx
+    PUSH si
+    PUSH ax
+    MOV cx, 0000h
+    LEA si, chain
+
+    cycle:
+        CMP cx, length
+        JE jumpCycle
+        MOV al, [si]
+        CMP al, 0Ah
+        JE exchange
+        CMP al, 0Dh
+        JE exchange
+        INC si
+        INC cx
+        JMP cycle
+    
+    exchange:
+        MOV al, 00h
+        MOV [si], al
+        INC si
+        INC cx
+        JMP cycle
+    
+    jumpCycle:
+        POP ax
+        POP si
+        POP cx
+endm
+
+;--------------------------------------------------CARGAR NIVELES
+loadLevels macro
+    LOCAL nameLevel, pointNamelvl1, pointNamelvl2, pointNamelvl3, pointNamelvl4, exitMacro
+    MOV cl, 00h        ;CONTADOR DE CARACTERES
+    MOV ch, 01h        ;CONTADOR DE NIVELES, 1 NIVEL POR LINEA
+    LEA si, readGameLoad
+
+    nameLevel:              ;COMPARACION DE EN QUE LINEA SE ENCUENTRA PARA ASIGNAR A UNA VARIABLE
+        CMP ch, 01h
+        JE pointNamelvl1
+        CMP ch, 02h
+        JE pointNamelvl2
+        CMP ch, 03h
+        JE pointNamelvl3
+        CMP ch, 04h
+        JE pointNamelvl4
+        CMP ch, 05h
+        JE pointNamelvl5
+        CMP ch, 06h
+        JE pointNamelvl6
+
+    pointNamelvl1:
+        LEA di, nameLevel1
+        JMP nameCycle
+    
+    pointNamelvl2:
+        LEA di, nameLevel2
+        JMP nameCycle
+    
+    pointNamelvl3:
+        LEA di, nameLevel3
+        JMP nameCycle
+    
+    pointNamelvl4:
+        LEA di, nameLevel4
+        JMP nameCycle
+
+    pointNamelvl5:
+        LEA di, nameLevel5
+        JMP nameCycle
+    
+    pointNamelvl6:
+        LEA di, nameLevel6
+
+    nameCycle:
+        MOV al, [si]
+        CMP al, 3Bh                 ;SI ENCUENTRA UN ';'
+        JE beforeStartTimeLevel
+        CMP cl, 06h
+        JAE increaseNameCycle
+        MOV [di], al
+        INC di
+    
+    increaseNameCycle:
+        INC cl
+        INC si
+        JMP nameCycle
+
+    beforeStartTimeLevel:
+        MOV cl, 00h
+        INC si
+        LEA di, levelTime    ;GUARDAMOS EL TEXTO DEL NUMERO
+
+    timeLevelCycle:
+        MOV al, [si]
+        CMP al, 3Bh
+        JE timeLevel
+        CMP cl, 03h
+        JAE increaseCycleTimeLevel
+        MOV [di], al
+        INC di
+    
+    increaseCycleTimeLevel:
+        INC cl
+        INC si
+        JMP timeLevelCycle
+    
+    timeLevel:
+        countValidDigits levelTime 0003h      ;VERIFICAR SI ES UN NUMERO DE 1 DIGITO, 2 O 3
+        CMP validDigits, 01h
+        JE convert1DigitNumber  
+        CMP validDigits, 02h
+        JE convert2DigitNumber
+        CMP validDigits, 03h
+        JE convert3DigitNumber
+
+    convert1DigitNumber:
+        LEA di, levelTime
+        MOV al, [di]
+        SUB al, 30h
+        MOV ah, 00h
+        MOV numberWord, ax
+        JMP compareLevels
+    
+    convert2DigitNumber:
+        LEA di, levelTime
+        MOV al, [di]
+        SUB al, 30h
+        MOV tenthNumber, al
+        INC di
+        MOV al, [di]
+        SUB al, 30h
+        MOV unitNumber, al
+        MOV hundredthNumber, 00h
+        form3DigitNumber hundredthNumber tenthNumber unitNumber
+        JMP compareLevels
+    
+    convert3DigitNumber:
+        LEA di, levelTime
+        MOV al, [di]
+        SUB al, 30h
+        MOV hundredthNumber, al
+        INC di
+        MOV al, [di]
+        SUB al, 30h
+        MOV tenthNumber, al
+        INC di
+        MOV al, [di]
+        SUB al, 30h
+        MOV unitNumber, al
+        form3DigitNumber hundredthNumber tenthNumber unitNumber
+    
+    compareLevels:
+        CMP ch, 01h
+        JE saveLevel1Time
+        CMP ch, 02h
+        JE saveLevel2Time
+        CMP ch, 03h
+        JE saveLevel3Time
+        CMP ch, 04h
+        JE saveLevel4Time
+        CMP ch, 05h
+        JE saveLevel5Time
+        CMP ch, 06h
+        JE saveLevel6Time
+    
+    saveLevel1Time:
+        MOV ax, numberWord
+        MOV timeLevel1, ax
+        JMP beforeObstacleTimeCycle
+
+    saveLevel2Time:
+        MOV ax, numberWord
+        MOV timeLevel2, ax
+        JMP beforeObstacleTimeCycle
+
+    saveLevel3Time:
+        MOV ax, numberWord
+        MOV timeLevel3, ax
+        JMP beforeObstacleTimeCycle
+
+    saveLevel4Time:
+        MOV ax, numberWord
+        MOV timeLevel4, ax
+        JMP beforeObstacleTimeCycle
+
+    saveLevel5Time:
+        MOV ax, numberWord
+        MOV timeLevel5, ax
+        JMP beforeObstacleTimeCycle
+
+    saveLevel6Time:
+        MOV ax, numberWord
+        MOV timeLevel6, ax
+
+    beforeObstacleTimeCycle:
+        INC si
+        MOV cl, 00h
+        LEA di, obstacleTime 
+
+    obstacleCourse:
+        MOV al, [si]
+        CMP al, 3Bh
+        JE checkNumberDigits
+        CMP cl, 03h
+        JAE increaseCycleTimeObstacle
+        MOV [di], al
+        INC di
+        
+    increaseCycleTimeObstacle:
+        INC si
+        INC cl
+        JMP obstacleCourse
+    
+    checkNumberDigits:
+        countValidDigits obstacleTime 0003h     ;VERIFICAR LSO DIGITOS QUE TIENE EL TIEMPO DE OBSTACULOS
+        CMP validDigits, 01h
+        JE convert1DigitNumber2
+        CMP validDigits, 02h
+        JE convert2DigitNumber2
+        CMP validDigits, 03h
+        JE convert3DigitNumber2
+
+    convert1DigitNumber2:
+        LEA di, obstacleTime
+        MOV al, [di]
+        SUB al, 30h
+        MOV ah, 00h
+        MOV numberWord, ax
+        JMP compareLevels2
+
+    convert2DigitNumber2:
+        LEA di, obstacleTime
+        MOV al, [di]
+        SUB al, 30h
+        MOV tenthNumber, al
+        INC di
+        MOV al, [di]
+        SUB al, 30h
+        MOV unitNumber, al
+        MOV hundredthNumber, 00h
+        form3DigitNumber hundredthNumber tenthNumber unitNumber
+        JMP compareLevels2
+
+    convert3DigitNumber2:
+        LEA di, obstacleTime
+        MOV al, [di]
+        SUB al, 30h
+        MOV hundredthNumber, al
+        INC di
+        MOV al, [di]
+        SUB al, 30h
+        MOV tenthNumber, al
+        INC di
+        MOV al, [di]
+        SUB al, 30h
+        MOV unitNumber, al
+        form3DigitNumber hundredthNumber tenthNumber unitNumber
+
+    compareLevels2:   
+        CMP ch, 01h
+        JE saveObstacleTimeLevel1
+        CMP ch, 02h
+        JE saveObstacleTimeLevel2
+        CMP ch, 03h
+        JE saveObstacleTimeLevel3
+        CMP ch, 04h
+        JE saveObstacleTimeLevel4
+        CMP ch, 05h
+        JE saveObstacleTimeLevel5
+        CMP ch, 06h
+        JE saveObstacleTimeLevel6
+
+    saveObstacleTimeLevel1:
+        MOV ax, numberWord
+        MOV obstacleTimeLevel1, ax
+        JMP beforeAwardTime
+
+    saveObstacleTimeLevel2:
+        MOV ax, numberWord
+        MOV obstacleTimeLevel2, ax
+        JMP beforeAwardTime
+
+    saveObstacleTimeLevel3:
+        MOV ax, numberWord
+        MOV obstacleTimeLevel3, ax
+        JMP beforeAwardTime
+
+    saveObstacleTimeLevel4:
+        MOV ax, numberWord
+        MOV obstacleTimeLevel4, ax
+        JMP beforeAwardTime
+
+    saveObstacleTimeLevel5:
+        MOV ax, numberWord
+        MOV obstacleTimeLevel5, ax
+        JMP beforeAwardTime
+
+    saveObstacleTimeLevel6:
+        MOV ax, numberWord
+        MOV obstacleTimeLevel6, ax
+        
+    beforeAwardTime:
+        INC si
+        MOV cl, 00h
+        LEA di, awardTime
+
+    prizeCycleTime:
+        MOV al, [si]
+        CMP al, 3Bh
+        JE checkNumberDigits2
+        CMP cl, 03h
+        JAE increaseCycleTimeAward
+        MOV [di], al
+        INC di
+        
+    increaseCycleTimeAward:
+        INC si
+        INC cl
+        JMP prizeCycleTime
+    
+    checkNumberDigits2:
+        countValidDigits awardTime 0003h     ;VERIFICAR LOS DIGITOS QUE TIENE EL TIEMPO DE OBSTACULOS
+        CMP validDigits, 01h
+        JE convert1DigitNumber3
+        CMP validDigits, 02h
+        JE convert2DigitNumber3
+        CMP validDigits, 03h
+        JE convert3DigitNumber3
+
+    convert1DigitNumber3:
+        LEA di, awardTime
+        MOV al, [di]
+        SUB al, 30h
+        MOV ah, 00h
+        MOV numberWord, ax
+        JMP compareLevels3
+
+    convert2DigitNumber3:
+        LEA di, awardTime
+        MOV al, [di]
+        SUB al, 30h
+        MOV tenthNumber, al
+        INC di
+        MOV al, [di]
+        SUB al, 30h
+        MOV unitNumber, al
+        MOV hundredthNumber, 00h
+        form3DigitNumber hundredthNumber tenthNumber unitNumber
+        JMP compareLevels3
+
+    convert3DigitNumber3:
+        LEA di, awardTime
+        MOV al, [di]
+        SUB al, 30h
+        MOV hundredthNumber, al
+        INC di
+        MOV al, [di]
+        SUB al, 30h
+        MOV tenthNumber, al
+        INC di
+        MOV al, [di]
+        SUB al, 30h
+        MOV unitNumber, al
+        form3DigitNumber hundredthNumber tenthNumber unitNumber
+
+    compareLevels3:   
+        CMP ch, 01h
+        JE savePrizeTimeLevel1
+        CMP ch, 02h
+        JE savePrizeTimeLevel2
+        CMP ch, 03h
+        JE savePrizeTimeLevel3
+        CMP ch, 04h
+        JE savePrizeTimeLevel4
+        CMP ch, 05h
+        JE savePrizeTimeLevel5
+        CMP ch, 06h
+        JE savePrizeTimeLevel6
+
+    savePrizeTimeLevel1:
+        MOV ax, numberWord
+        MOV awardTimeLevel1, ax
+        JMP beforeObstaclePoints
+
+    savePrizeTimeLevel2:
+        MOV ax, numberWord
+        MOV awardTimeLevel2, ax
+        JMP beforeObstaclePoints
+
+    savePrizeTimeLevel3:
+        MOV ax, numberWord
+        MOV awardTimeLevel3, ax
+        JMP beforeObstaclePoints
+
+    savePrizeTimeLevel4:
+        MOV ax, numberWord
+        MOV awardTimeLevel4, ax
+        JMP beforeObstaclePoints
+
+    savePrizeTimeLevel5:
+        MOV ax, numberWord
+        MOV awardTimeLevel5, ax
+        JMP beforeObstaclePoints
+
+    savePrizeTimeLevel6:
+        MOV ax, numberWord
+        MOV awardTimeLevel6, ax
+    
+    beforeObstaclePoints:
+        INC si
+        MOV cl, 00h
+        LEA di, obstaclePoints
+    
+    obstaclePointsCycle:
+        MOV al, [si]
+        CMP al, 3Bh
+        JE checkNumberDigits3
+        CMP cl, 02h
+        JAE increaseCyclePointsObstacles
+        MOV [di], al
+        INC di
+        
+    increaseCyclePointsObstacles:
+        INC si
+        INC cl
+        JMP obstaclePointsCycle
+    
+    checkNumberDigits3:
+        countValidDigits obstaclePoints 0002h     ;VERIFICAR LOS DIGITOS QUE TIENE EL TIEMPO DE OBSTACULOS
+        CMP validDigits, 01h
+        JE convert1DigitNumber4
+        CMP validDigits, 02h
+        JE convert2DigitNumber4
+
+    convert1DigitNumber4:
+        LEA di, obstaclePoints
+        MOV al, [di]
+        SUB al, 30h
+        MOV ah, 00h
+        MOV numberWord, ax
+        JMP compareLevels4
+
+    convert2DigitNumber4:
+        LEA di, obstaclePoints
+        MOV al, [di]
+        SUB al, 30h
+        MOV tenthNumber, al
+        INC di
+        MOV al, [di]
+        SUB al, 30h
+        MOV unitNumber, al
+        MOV hundredthNumber, 00h
+        form3DigitNumber hundredthNumber tenthNumber unitNumber
+
+    compareLevels4:   
+        CMP ch, 01h
+        JE saveObstaclePointsLevel1
+        CMP ch, 02h
+        JE saveObstaclePointsLevel2
+        CMP ch, 03h
+        JE saveObstaclePointsLevel3
+        CMP ch, 04h
+        JE saveObstaclePointsLevel4
+        CMP ch, 05h
+        JE saveObstaclePointsLevel5
+        CMP ch, 06h
+        JE saveObstaclePointsLevel6
+
+    saveObstaclePointsLevel1:
+        MOV ax, numberWord
+        MOV obstaclePointsLevel1, ax
+        JMP beforeAwardPoints
+
+    saveObstaclePointsLevel2:
+        MOV ax, numberWord
+        MOV obstaclePointsLevel2, ax
+        JMP beforeAwardPoints
+
+    saveObstaclePointsLevel3:
+        MOV ax, numberWord
+        MOV obstaclePointsLevel3, ax
+        JMP beforeAwardPoints
+
+    saveObstaclePointsLevel4:
+        MOV ax, numberWord
+        MOV obstaclePointsLevel4, ax
+        JMP beforeAwardPoints
+
+    saveObstaclePointsLevel5:
+        MOV ax, numberWord
+        MOV obstaclePointsLevel5, ax
+        JMP beforeAwardPoints
+
+    saveObstaclePointsLevel6:
+        MOV ax, numberWord
+        MOV obstaclePointsLevel6, ax
+    
+    beforeAwardPoints:
+        INC si
+        MOV cl, 00h
+        LEA di, awardPoints
+    
+    awardPointCycle:
+        MOV al, [si]
+        CMP al, 3Bh
+        JE checkNumberDigits4
+        CMP cl, 02h
+        JAE increaseAwardPointCycle
+        MOV [di], al
+        INC di
+        
+    increaseAwardPointCycle:
+        INC si
+        INC cl
+        JMP awardPointCycle
+    
+    checkNumberDigits4:
+        countValidDigits awardPoints 0002h     ;VERIFICAR LOS DIGITOS QUE TIENE EL TIEMPO DE OBSTACULOS
+        CMP validDigits, 01h
+        JE convert1DigitNumber5
+        CMP validDigits, 02h
+        JE convert2DigitNumber5
+
+    convert1DigitNumber5:
+        LEA di, obstaclePoints
+        MOV al, [di]
+        SUB al, 30h
+        MOV ah, 00h
+        MOV numberWord, ax
+        JMP compareLevels5
+
+    convert2DigitNumber5:
+        LEA di, obstaclePoints
+        MOV al, [di]
+        SUB al, 30h
+        MOV tenthNumber, al
+        INC di
+        MOV al, [di]
+        SUB al, 30h
+        MOV unitNumber, al
+        MOV hundredthNumber, 00h
+        form3DigitNumber hundredthNumber tenthNumber unitNumber
+
+    compareLevels5:   
+        CMP ch, 01h
+        JE saveAwardPointsLevel1
+        CMP ch, 02h
+        JE saveAwardPointsLevel2
+        CMP ch, 03h
+        JE saveAwardPointsLevel3
+        CMP ch, 04h
+        JE saveAwardPointsLevel4
+        CMP ch, 05h
+        JE saveAwardPointsLevel5
+        CMP ch, 06h
+        JE saveAwardPointsLevel6
+
+    saveAwardPointsLevel1:
+        MOV ax, numberWord
+        MOV awardPointsLevel1, ax
+        JMP compareLevels6
+
+    saveAwardPointsLevel2:
+        MOV ax, numberWord
+        MOV awardPointsLevel2, ax
+        JMP compareLevels6
+
+    saveAwardPointsLevel3:
+        MOV ax, numberWord
+        MOV awardPointsLevel3, ax
+        JMP compareLevels6
+
+    saveAwardPointsLevel4:
+        MOV ax, numberWord
+        MOV awardPointsLevel4, ax
+        JMP compareLevels6
+
+    saveAwardPointsLevel5:
+        MOV ax, numberWord
+        MOV awardPointsLevel5, ax
+        JMP compareLevels6
+
+    saveAwardPointsLevel6:
+        MOV ax, numberWord
+        MOV awardPointsLevel6, ax
+
+    compareLevels6:
+        INC si
+        MOV cl, 00h   
+        CMP ch, 01h
+        JE aimColorLevel1
+        CMP ch, 02h
+        JE aimColorLevel2
+        CMP ch, 03h
+        JE aimColorLevel3
+        CMP ch, 04h
+        JE aimColorLevel4
+        CMP ch, 05h
+        JE aimColorLevel5
+        CMP ch, 06h
+        JE aimColorLevel6
+    
+    aimColorLevel1:
+        LEA di, colorLevel1
+        JMP colourCycle
+    
+    aimColorLevel2:
+        LEA di, colorLevel2
+        JMP colourCycle
+    
+    aimColorLevel3:
+        LEA di, colorLevel3
+        JMP colourCycle
+
+    aimColorLevel4:
+        LEA di, colorLevel4
+        JMP colourCycle
+
+    aimColorLevel5:
+        LEA di, colorLevel5
+        JMP colourCycle
+    
+    aimColorLevel6:
+        LEA di, colorLevel6
+    
+    colourCycle:
+        MOV al, [si]
+        CMP al, 0Ah
+        JE newLevel
+        CMP al, 0Dh
+        JE newLevel
+        CMP cl, 06h
+        JAE increaseColorRendering
+        MOV [di], al
+        INC di
+        
+    increaseColorRendering:
+        INC si
+        INC cl
+        JMP colourCycle
+    
+    newLevel:
+        CMP ch, 06h
+        JE exitMacro
+        INC ch
+        INC si
+        MOV cl, 00h
+        JMP nameLevel
+    
+    exitMacro:
+endm
+
+;-------------------------------------------IDENTFIAR LA CANTIDAD DE DIGITOS VALIDOS DE UN TIEMPO DEL ARCHIVO DE ENTRADA
+countValidDigits macro chain, length
+    LOCAL scanDigits, runThrough
+    PUSH si
+    PUSH cx
+    PUSH ax
+    LEA si, chain
+    MOV cx, length
+    MOV validDigits, 00h
+
+    scanDigits:
+        MOV al, [si]
+        CMP al, 00h
+        JNA runThrough
+        INC validDigits
+    
+    runThrough:
+        INC si
+        LOOP scanDigits
+        POP ax
+        POP cx
+        POP si
 endm
