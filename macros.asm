@@ -33,6 +33,14 @@ readChain macro length, savedChain
     INT 21h
 endm
 
+;---------TRAER HORA = CH, MINUTOS = CL Y SEGUNDOS = DH    DEL SISTEMA    (DL = 1/100 SECONDS)
+getSystemTime macro
+    PUSH ax
+    MOV ah, 2Ch
+    INT 21h
+    POP ax
+endm
+
 ;---------CREAR UN ARCHIVO DE REPORTE
 createFile macro fileName
     LOCAL noFileErro
@@ -709,6 +717,7 @@ endm
 frame macro xInitial, yInitial
     LOCAL buildTopHeader, armLeftSide, buildDownHeader, armRightSide
     MOV cx, 0140h
+    SUB cx, xInitial 
     MOV coordenateYVideoMode, yInitial
     MOV coordenateXVideoMode, xInitial
 
@@ -716,7 +725,7 @@ frame macro xInitial, yInitial
         paintPixel 0Fh, coordenateXVideoMode, coordenateYVideoMode
         INC coordenateXVideoMode
         LOOP buildTopHeader
-        MOV coordenateXVideoMode, 0000h
+        MOV coordenateXVideoMode, xInitial
         MOV bx, 00C8h
         SUB bx, yInitial
         MOV cx, bx
@@ -726,6 +735,7 @@ frame macro xInitial, yInitial
         INC coordenateYVideoMode
         LOOP armLeftSide
         MOV cx, 0140h
+        SUB cx, xInitial
         DEC coordenateYVideoMode
 
     buildDownHeader:
@@ -733,6 +743,46 @@ frame macro xInitial, yInitial
         INC coordenateXVideoMode
         LOOP buildDownHeader
         MOV bx, 00C8h
+        SUB bx, yInitial
+        MOV cx, bx
+        DEC coordenateXVideoMode
+    
+    armRightSide:
+        paintPixel 0Fh, coordenateXVideoMode, coordenateYVideoMode
+        DEC coordenateYVideoMode
+        LOOP armRightSide
+endm
+
+;-----------ARMAR MARCO DE REPORTE
+frameGame macro xInitial, yInitial, xFinal, yFinal
+    LOCAL buildTopHeader, armLeftSide, buildDownHeader, armRightSide
+    MOV cx, xFinal
+    SUB cx, xInitial 
+    MOV coordenateYVideoMode, yInitial
+    MOV coordenateXVideoMode, xInitial
+
+    buildTopHeader:
+        paintPixel 0Fh, coordenateXVideoMode, coordenateYVideoMode
+        INC coordenateXVideoMode
+        LOOP buildTopHeader
+        MOV coordenateXVideoMode, xInitial
+        MOV bx, yFinal
+        SUB bx, yInitial
+        MOV cx, bx
+    
+    armLeftSide:
+        paintPixel 0Fh, coordenateXVideoMode, coordenateYVideoMode
+        INC coordenateYVideoMode
+        LOOP armLeftSide
+        MOV cx, xFinal
+        SUB cx, xInitial
+        DEC coordenateYVideoMode
+
+    buildDownHeader:
+        paintPixel 0Fh, coordenateXVideoMode, coordenateYVideoMode
+        INC coordenateXVideoMode
+        LOOP buildDownHeader
+        MOV bx, yFinal
         SUB bx, yInitial
         MOV cx, bx
         DEC coordenateXVideoMode
@@ -3412,4 +3462,62 @@ countValidDigits macro chain, length
         POP ax
         POP cx
         POP si
+endm
+
+;---------------------------MACRO PARA DIBUJAR EL CARRO
+drawCart macro i, j, columns, rows, color
+    LOCAL looper, nextPixel
+    XOR di, di
+    pushVideoMemory
+    videoMemory
+    popVideoMemory
+    MOV ax, 0140h   ;-----
+    MOV bx, i       ;--
+    MUL bx          ;-      FORMULA PARA CALCULAR LA POSICION EN LA MATRIZ DONDE PINTAR EL PIXEL
+    ADD ax, j       ;----   140H * i * j
+    MOV di, ax      ; DESPLAZAMIENTO EN LA MEMORIA DE VIDEO A000:DI
+    MOV ax, columns ;
+    MOV bx, rows    ;   CALCULAR EL CICLO PIXELES * PIXELES EN ESTE CASO COLUMNS * ROWS
+    MUL bx          ;
+    MOV cx, ax
+    MOV dx, color
+    MOV bx, 0140h   ;
+    MOV ax, j       ;   POSICION DE J DE LA MATRIZ MAS ANCHO DE LA FIGURA, 320 - (J + ANCHO) = SALTAR A LA FILA DE ABAJO
+    ADD ax, columns ;
+    SUB bx, ax      ;
+    ADD bx, j       
+    MOV ax, 0000h   ;CONTADOR DE ANCHO DE PIXELES DE LA FIGURA
+
+    looper:
+        MOV [di], dx
+        INC di
+        INC ax
+        CMP ax, columns
+        JNE nextPixel
+        ADD di, bx
+        XOR ax, ax
+    
+    nextPixel:
+        LOOP looper
+        XOR dx, dx
+        XOR di, di
+        cleanVariablesOnVideo
+        passDataSegment
+endm
+
+;--------------------PUSHEAR VARIABLES IMPORTANTES DW PARA EL MANEJO DE LA MEMORIA DE VIDEO
+pushVideoMemory macro
+    PUSH iCart
+    PUSH jCart
+endm
+
+;--------------------POPEAR VARIABLES IMPORTANTES DW PARA EL MANEJO DE LA MEMORIA DE VIDEO
+popVideoMemory macro
+    POP jCart
+    POP iCart
+endm
+
+cleanVariablesOnVideo macro
+    MOV iCart, 0000h
+    MOV jCart, 0000h
 endm

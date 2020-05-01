@@ -145,6 +145,13 @@ readGameLoad db 156 dup (" "), "$"
 
 validDigits db 00
 
+startPositionLevelNamePointer dw 0000
+vehiculeColor dw 0000
+
+timeVariable dw 0000
+iCart dw 0000
+jCart dw 0000
+
 ;--------------------------VARIABLES PARA VERIFICACION DE USUARIOS
 usernameMsg db 10, 10, 13, "Nombre de usuario: ", "$"
 passwordMsg db 10, 13, "Contrasena: ", "$"
@@ -166,6 +173,9 @@ orderingQuickSortMsg db "ORDENAMIENTO: QUICKSORT ", "$"
 orderingShellSortMsg db "ORDENAMIENTO: SHELLSORT ", "$"
 
 timeMsg db "TIEMPO: 00:00  ", "$"
+
+punctuationMsg db "03", "$"
+timeGameMsg db "00:00", "$"
 
 speedMsg db "VELOCIDAD: ", "$"
 
@@ -323,7 +333,7 @@ main proc
         JE jumpPlay
         CMP al, 02h
         JE jumpLoadFile
-        JMP administrationMenu
+        JMP mainMenu
 
     jumpTop10Points:
         JMP getTop10Points
@@ -338,6 +348,42 @@ main proc
         JMP loadFile
 
     playGame:
+        graphicMode     ;PASAR AL MODO GRAFICO
+        printGraphicMode username 00h 00h 0007h   ;IMPRIMIR EN MODO GRAFICO
+        getInfoCursor   ;TRAER LA POSICION DEL CURSOR 
+        ADD dl, 05h
+        MOV al, dl
+        MOV ah, 00h
+        MOV startPositionLevelNamePointer, ax
+        printGraphicMode nameLevel1 00h dl 0006h
+        getInfoCursor
+        ADD dl, 05h
+        printGraphicMode punctuationMsg 00h dl 0002h
+        getInfoCursor
+        ADD dl, 08h
+        printGraphicMode timeGameMsg 00h dl 0005h
+        frameGame 0000h 000Ah 0140h 00C8h       ;DIBUJAR MARCO
+        frameGame 0001h 000Bh 013Fh 00C7h       ;PARA SIMULAR MARGEN DEL CARRO
+        frameGame 0002h 000Ch 013Eh 00C6h
+        frameGame 0003h 000Dh 013Dh 00C5h
+        frameGame 0004h 000Eh 013Ch 00C4h
+        MOV iCart, 009Ah
+        MOV jCart, 008Ch
+        ;drawCart 009Ah 008Ch 0028h 0028h 0003h  ;GRAFICAR CARRO
+    
+    launchLevel1:
+        getSystemTime   ;TRAER TIEMPO DEL SISTEMA
+        MOV al, dl      
+        MOV ah, 00h
+        CMP ax, timeVariable
+        JE launchLevel1
+        MOV timeVariable, ax
+        ADD jCart, 000Ah
+        drawCart iCart jCart 0028h 0028h 0003h
+        JMP launchLevel1
+        readCharacterVideoMode 
+        textMode      
+        JMP exit
 
     loadFile:
         print enterFileNameMsg
@@ -348,7 +394,7 @@ main proc
         closeFile         ;CERRAR EL ARCHIVO
         loadLevels        ;DEL STRING LEIDO CARGAR A LOS RESPECTIVOS NIVELES
         print fileMessageReadSuccessfully
-        JMP exit
+        JMP userMenu
 
     getTop10Points:
         openFile userFileName 0h
