@@ -650,6 +650,12 @@ getKey macro
     INT 16h
 endm
 
+;-----------------LEER TECLA DE UN TECLADO, SIN ESPERAR LA PRESION
+getKeyAsynchronous macro
+    MOV ah, 01h
+    INT 16h
+endm
+
 ;-----------ENTRAR AL MODO GRAFICO
 graphicMode macro
     MOV ax, 0013h     ;   RESOLUCION: 320 * 200
@@ -3509,15 +3515,107 @@ endm
 pushVideoMemory macro
     PUSH iCart
     PUSH jCart
+    PUSH currentColor
 endm
 
 ;--------------------POPEAR VARIABLES IMPORTANTES DW PARA EL MANEJO DE LA MEMORIA DE VIDEO
 popVideoMemory macro
+    POP currentColor
     POP jCart
     POP iCart
 endm
 
+;---------------------MOVER VARIABLES IMPORTANTES A 0 PARA QUE NO PINTE COSAS RANDOM LA MEMORIA
 cleanVariablesOnVideo macro
     MOV iCart, 0000h
     MOV jCart, 0000h
+    MOV currentColor, 0000h
+endm
+
+;----------------IMPRMIR CABECERA DEL JUEGO
+printGameHeader macro
+    printGraphicMode username 00h 00h 0007h   ;IMPRIMIR EN MODO GRAFICO
+    getInfoCursor   ;TRAER LA POSICION DEL CURSOR
+    ADD dl, 05h
+    printGraphicMode nameLevel1 00h dl 0006h
+    getInfoCursor
+    ADD dl, 05h
+    printGraphicMode punctuationMsg 00h dl 0002h
+    getInfoCursor
+    ADD dl, 08h
+    printGraphicMode timeGameMsg 00h dl 0005h 
+endm
+
+;----------------IMPRMIR MARCO DEL JUEGO
+printFrame macro
+    frameGame 0000h 000Ah 0140h 00C8h       ;DIBUJAR MARCO
+    frameGame 0001h 000Bh 013Fh 00C7h       ;PARA SIMULAR MARGEN DEL CARRO
+    frameGame 0002h 000Ch 013Eh 00C6h
+    frameGame 0003h 000Dh 013Dh 00C5h
+    frameGame 0004h 000Eh 013Ch 00C4h
+endm
+
+;-------------------MACRO PARA MOVER EL CARRO SI USA LAS FECHAS
+detectCarMovement macro
+    LOCAL moveRight, moveLeft, exitMacro
+    getKeyAsynchronous  ;LEER TECLA
+    JZ exitMacro        ;SI LA BANDERA 0 ESTA ACTIVA NO HAY TECLA PRESIONADA
+    getKey
+    CMP ah, 4Dh
+    JE moveRight
+    CMP ah, 4Bh
+    JE moveLeft
+    JMP exitMacro
+
+    moveRight:
+        CMP jCart, 010Ah
+        JAE exitMacro
+        MOV ax, cartVelocity
+        ADD jCart, ax
+        JMP exitMacro
+
+    moveLeft:
+        CMP jCart, 000Eh
+        JBE exitMacro
+        MOV ax, cartVelocity
+        SUB jCart, ax
+    
+    exitMacro:
+endm
+
+;--------------PONER COLOR DEL CARRO DEL NIVEL
+updateCartColor macro color
+    LOCAL assignRed, assignBlue, assignGreen, assignWhite, exitMacro
+    PUSH es
+    chainComparison 0006h color redWord    ;COMPARAMOS LAS DOS CADENAS PARA DETERMINAR SI ES DE ESE COLOR
+    REPE CMPSB
+    JE assignRed
+    chainComparison 0006h color blueWord
+    REPE CMPSB
+    JE assignBlue
+    chainComparison 0006h color greenWord
+    REPE CMPSB
+    JE assignGreen
+    chainComparison 0006h color whiteWord
+    REPE CMPSB
+    JE assignWhite
+    JMP exitMacro
+
+    assignRed:
+        MOV currentColor, 0004h         ;SE ASIGNA EL COLOR
+        JMP exitMacro
+    
+    assignBlue:
+        MOV currentColor, 0001h
+        JMP exitMacro
+    
+    assignGreen:
+        MOV currentColor, 0002h
+        JMP exitMacro
+    
+    assignWhite:
+        MOV currentColor, 000Fh
+    
+    exitMacro:
+        POP es
 endm

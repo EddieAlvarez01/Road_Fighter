@@ -98,7 +98,7 @@ obstacleTimeLevel1 dw 0000
 awardTimeLevel1 dw 0000
 obstaclePointsLevel1 dw 0000
 awardPointsLevel1 dw 0000
-colorLevel1 db 6 dup(0), "$"
+colorLevel1 db 6 dup(" "), "$"
 
 nameLevel2 db 6 dup(0), "$"
 timeLevel2 dw 0000
@@ -106,7 +106,7 @@ obstacleTimeLevel2 dw 0000
 awardTimeLevel2 dw 0000
 obstaclePointsLevel2 dw 0000
 awardPointsLevel2 dw 0000
-colorLevel2 db 6 dup(0), "$"
+colorLevel2 db 6 dup(" "), "$"
 
 nameLevel3 db 6 dup(0), "$"
 timeLevel3 dw 0000
@@ -114,7 +114,7 @@ obstacleTimeLevel3 dw 0000
 awardTimeLevel3 dw 0000
 obstaclePointsLevel3 dw 0000
 awardPointsLevel3 dw 0000
-colorLevel3 db 6 dup(0), "$"
+colorLevel3 db 6 dup(" "), "$"
 
 nameLevel4 db 6 dup(0), "$"
 timeLevel4 dw 0000
@@ -122,7 +122,7 @@ obstacleTimeLevel4 dw 0000
 awardTimeLevel4 dw 0000
 obstaclePointsLevel4 dw 0000
 awardPointsLevel4 dw 0000
-colorLevel4 db 6 dup(0), "$"
+colorLevel4 db 6 dup(" "), "$"
 
 nameLevel5 db 6 dup(0), "$"
 timeLevel5 dw 0000
@@ -130,7 +130,7 @@ obstacleTimeLevel5 dw 0000
 awardTimeLevel5 dw 0000
 obstaclePointsLevel5 dw 0000
 awardPointsLevel5 dw 0000
-colorLevel5 db 6 dup(0), "$"
+colorLevel5 db 6 dup(" "), "$"
 
 nameLevel6 db 6 dup(0), "$"
 timeLevel6 dw 0000
@@ -138,7 +138,7 @@ obstacleTimeLevel6 dw 0000
 awardTimeLevel6 dw 0000
 obstaclePointsLevel6 dw 0000
 awardPointsLevel6 dw 0000
-colorLevel6 db 6 dup(0), "$"
+colorLevel6 db 6 dup(" "), "$"
 
 nameFileLoad db 20 dup(0), "$"
 readGameLoad db 156 dup (" "), "$"
@@ -151,6 +151,16 @@ vehiculeColor dw 0000
 timeVariable dw 0000
 iCart dw 0000
 jCart dw 0000
+cartVelocity dw 000Ah
+currentColor dw 0000
+longCurrentColor dw 0000
+
+
+;----------------------COMPARACION DE COLORES
+redWord db "rojo  ", "$"
+greenWord db "verde ", "$"
+blueWord db "azul  ", "$"
+whiteWord db "blanco", "$"
 
 ;--------------------------VARIABLES PARA VERIFICACION DE USUARIOS
 usernameMsg db 10, 10, 13, "Nombre de usuario: ", "$"
@@ -348,28 +358,9 @@ main proc
         JMP loadFile
 
     playGame:
-        graphicMode     ;PASAR AL MODO GRAFICO
-        printGraphicMode username 00h 00h 0007h   ;IMPRIMIR EN MODO GRAFICO
-        getInfoCursor   ;TRAER LA POSICION DEL CURSOR 
-        ADD dl, 05h
-        MOV al, dl
-        MOV ah, 00h
-        MOV startPositionLevelNamePointer, ax
-        printGraphicMode nameLevel1 00h dl 0006h
-        getInfoCursor
-        ADD dl, 05h
-        printGraphicMode punctuationMsg 00h dl 0002h
-        getInfoCursor
-        ADD dl, 08h
-        printGraphicMode timeGameMsg 00h dl 0005h
-        frameGame 0000h 000Ah 0140h 00C8h       ;DIBUJAR MARCO
-        frameGame 0001h 000Bh 013Fh 00C7h       ;PARA SIMULAR MARGEN DEL CARRO
-        frameGame 0002h 000Ch 013Eh 00C6h
-        frameGame 0003h 000Dh 013Dh 00C5h
-        frameGame 0004h 000Eh 013Ch 00C4h
-        MOV iCart, 009Ah
-        MOV jCart, 008Ch
-        ;drawCart 009Ah 008Ch 0028h 0028h 0003h  ;GRAFICAR CARRO
+        MOV iCart, 009Ah   ;CENTRAR
+        MOV jCart, 008Ch    ; EL CARRO
+        updateCartColor colorLevel1     ;ASIGNAR EL COLOR DEL CARRO
     
     launchLevel1:
         getSystemTime   ;TRAER TIEMPO DEL SISTEMA
@@ -378,8 +369,11 @@ main proc
         CMP ax, timeVariable
         JE launchLevel1
         MOV timeVariable, ax
-        ADD jCart, 000Ah
-        drawCart iCart jCart 0028h 0028h 0003h
+        graphicMode     ;ENTRAR AL MODO GRAFICO
+        printGameHeader     ;IMPRMIR CABECERA DEL JUEGO
+        printFrame          ;IMPRIMIR MARCO
+        detectCarMovement       ;VERIFICA SI SE PRESIONARON LAS FLECHAS PARA MOVER
+        drawCart iCart jCart 0028h 0028h currentColor   ;DIBUJAR CARRO
         JMP launchLevel1
         readCharacterVideoMode 
         textMode      
