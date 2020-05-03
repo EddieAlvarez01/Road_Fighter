@@ -375,7 +375,8 @@ main proc
         detectCarMovement       ;VERIFICA SI SE PRESIONARON LAS FLECHAS PARA MOVER
         drawCart iCart jCart 0028h 0028h currentColor   ;DIBUJAR CARRO
         JMP launchLevel1
-        readCharacterVideoMode 
+    
+    endUpSplitting:
         textMode      
         JMP exit
 

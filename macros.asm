@@ -3565,6 +3565,8 @@ detectCarMovement macro
     JE moveRight
     CMP ah, 4Bh
     JE moveLeft
+    CMP ah, 01h
+    gameBreak           ;EJECUTA LA PAUSA
     JMP exitMacro
 
     moveRight:
@@ -3618,4 +3620,21 @@ updateCartColor macro color
     
     exitMacro:
         POP es
+endm
+
+;--------------------PAUSA DEL JUEGO
+gameBreak macro
+    LOCAL listeningLoop, exitMacro
+
+    listeningLoop:
+        getKeyAsynchronous
+        JZ listeningLoop
+        getKey
+        CMP ah, 01h
+        JE exitMacro
+        CMP ah, 39h
+        JNE listeningLoop
+        JMP endUpSplitting
+
+    exitMacro:
 endm
