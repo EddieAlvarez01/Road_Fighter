@@ -149,11 +149,13 @@ startPositionLevelNamePointer dw 0000
 vehiculeColor dw 0000
 
 timeVariable dw 0000
+displayTime dw 0000
 iCart dw 0000
 jCart dw 0000
 cartVelocity dw 000Ah
 currentColor dw 0000
-longCurrentColor dw 0000
+currentLevel db 00
+currentTimeLevel dw 0000
 
 
 ;----------------------COMPARACION DE COLORES
@@ -255,9 +257,11 @@ main proc
         INT 21h
     
     jumpIn:
+        clearUsernameMemory
         JMP login
 
     skipRegistration:
+        clearUsernameMemory
         JMP register
     
     register:
@@ -288,6 +292,7 @@ main proc
         print registeredUserMsg
         print pressAKeyMsg
         readCharacterWithoutPrinting
+        clearUsernameMemory
         JMP mainMenu
 
     login:
@@ -360,6 +365,9 @@ main proc
     playGame:
         MOV iCart, 009Ah   ;CENTRAR
         MOV jCart, 008Ch    ; EL CARRO
+        MOV currentLevel, 01h       ;EMPEZAR DESDE EL NIVEL 1
+        MOV ax, timeLevel1
+        MOV currentTimeLevel, ax
         updateCartColor colorLevel1     ;ASIGNAR EL COLOR DEL CARRO
     
     launchLevel1:
@@ -369,16 +377,191 @@ main proc
         CMP ax, timeVariable
         JE launchLevel1
         MOV timeVariable, ax
+        CMP timeVariable, 0032h
+        JE increaseDisplayTime
+        JMP keepGoing
+
+    increaseDisplayTime:
+        INC displayTime
+        MOV ax, currentTimeLevel
+        CMP displayTime, ax
+        JNE keepGoing
+        JMP preStartLevel2
+    
+    keepGoing:
         graphicMode     ;ENTRAR AL MODO GRAFICO
-        printGameHeader     ;IMPRMIR CABECERA DEL JUEGO
+        printGameHeader displayTime nameLevel1    ;IMPRMIR CABECERA DEL JUEGO
         printFrame          ;IMPRIMIR MARCO
         detectCarMovement       ;VERIFICA SI SE PRESIONARON LAS FLECHAS PARA MOVER
         drawCart iCart jCart 0028h 0028h currentColor   ;DIBUJAR CARRO
         JMP launchLevel1
     
+    preStartLevel2:
+        updateCartColor colorLevel2
+        MOV ax, timeLevel2
+        ADD currentTimeLevel, ax
+        MOV timeVariable, 0000h
+
+    launchLevel2:
+        getSystemTime
+        MOV al, dl
+        MOV ah, 00h
+        CMP ax, timeVariable
+        JE launchLevel2
+        MOV timeVariable, ax
+        CMP timeVariable, 0032h
+        JE increaseDisplayTime2
+        JMP keepGoing2
+    
+    increaseDisplayTime2:
+        INC displayTime
+        MOV ax, currentTimeLevel
+        CMP displayTime, ax
+        JNE keepGoing2
+        JMP preStartLevel3
+
+    keepGoing2:
+        graphicMode
+        printGameHeader displayTime nameLevel2
+        printFrame
+        detectCarMovement
+        drawCart iCart jCart 0028h 0028h currentColor   ;DIBUJAR CARRO
+        JMP launchLevel2
+
+    preStartLevel3:
+        updateCartColor colorLevel3
+        MOV ax, timeLevel3
+        ADD currentTimeLevel, ax
+        MOV timeVariable, 0000h
+    
+    launchLevel3:
+        getSystemTime
+        MOV al, dl
+        MOV ah, 00h
+        CMP ax, timeVariable
+        JE launchLevel3
+        MOV timeVariable, ax
+        CMP timeVariable, 0032h
+        JE increaseDisplayTime3
+        JMP keepGoing3
+    
+    increaseDisplayTime3:
+        INC displayTime
+        MOV ax, currentTimeLevel
+        CMP displayTime, ax
+        JNE keepGoing3
+        JMP preStartLevel4
+
+    keepGoing3:
+        graphicMode
+        printGameHeader displayTime nameLevel3
+        printFrame
+        detectCarMovement
+        drawCart iCart jCart 0028h 0028h currentColor   ;DIBUJAR CARRO
+        JMP launchLevel3
+
+    preStartLevel4:
+        updateCartColor colorLevel4
+        MOV ax, timeLevel3
+        ADD currentTimeLevel, ax
+        MOV timeVariable, 0000h
+    
+    launchLevel4:
+        getSystemTime
+        MOV al, dl
+        MOV ah, 00h
+        CMP ax, timeVariable
+        JE launchLevel4
+        MOV timeVariable, ax
+        CMP timeVariable, 0032h
+        JE increaseDisplayTime4
+        JMP keepGoing4
+    
+    increaseDisplayTime4:
+        INC displayTime
+        MOV ax, currentTimeLevel
+        CMP displayTime, ax
+        JNE keepGoing4
+        JMP preStartLevel5
+
+    keepGoing4:
+        graphicMode
+        printGameHeader displayTime nameLevel4
+        printFrame
+        detectCarMovement
+        drawCart iCart jCart 0028h 0028h currentColor   ;DIBUJAR CARRO
+        JMP launchLevel4
+
+    preStartLevel5:
+        updateCartColor colorLevel5
+        MOV ax, timeLevel3
+        ADD currentTimeLevel, ax
+        MOV timeVariable, 0000h
+    
+    launchLevel5:
+        getSystemTime
+        MOV al, dl
+        MOV ah, 00h
+        CMP ax, timeVariable
+        JE launchLevel5
+        MOV timeVariable, ax
+        CMP timeVariable, 0032h
+        JE increaseDisplayTime5
+        JMP keepGoing5
+
+    increaseDisplayTime5:
+        INC displayTime
+        MOV ax, currentTimeLevel
+        CMP displayTime, ax
+        JNE keepGoing5
+        JMP preStartLevel6
+
+    keepGoing5:
+        graphicMode
+        printGameHeader displayTime nameLevel5
+        printFrame
+        detectCarMovement
+        drawCart iCart jCart 0028h 0028h currentColor   ;DIBUJAR CARRO
+        JMP launchLevel5
+    
+    preStartLevel6:
+        updateCartColor colorLevel6
+        MOV ax, timeLevel3
+        ADD currentTimeLevel, ax
+        MOV timeVariable, 0000h
+    
+    launchLevel6:
+        getSystemTime
+        MOV al, dl
+        MOV ah, 00h
+        CMP ax, timeVariable
+        JE launchLevel6
+        MOV timeVariable, ax
+        CMP timeVariable, 0032h
+        JE increaseDisplayTime6
+        JMP keepGoing6
+
+    increaseDisplayTime6:
+        INC displayTime
+        MOV ax, currentTimeLevel
+        CMP displayTime, ax
+        JNE keepGoing6
+        JMP endUpSplitting
+
+    keepGoing6:
+        graphicMode
+        printGameHeader displayTime nameLevel6
+        printFrame
+        detectCarMovement
+        drawCart iCart jCart 0028h 0028h currentColor   ;DIBUJAR CARRO
+        JMP launchLevel6
+
     endUpSplitting:
-        textMode      
-        JMP exit
+        textMode
+        MOV currentTimeLevel, 0000h
+        MOV timeVariable, 0000h
+        MOV displayTime, 0000h
+        JMP userMenu
 
     loadFile:
         print enterFileNameMsg

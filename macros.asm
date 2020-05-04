@@ -827,7 +827,7 @@ endm
 
 ;----------------GRAFICAR BARRAS PARA ORDENAMIENTO
 graphBarReport2 macro
-    LOCAL totalBarComparison2, finishBarReport2, continueBar2
+    LOCAL totalBarComparison2, finishBarReport2, continueBar2, Plot, notPlot, continue
     MOV bx, 0000h
     LEA si, usersAvailablePoints
     ADD si, 0009h
@@ -855,7 +855,19 @@ graphBarReport2 macro
         setBarColor numberForWrite
         MOV cx, coordenateXVideoMode
         MOV initialPosition, cx
+        CMP numberForWrite, 00h
+        JNE Plot
+        JMP notPlot
+    
+    Plot:
         plotBar colorBar, barWidth, barHeigth
+        JMP continue
+
+    notPlot:
+        MOV cx, barWidth
+        ADD coordenateXVideoMode, cx
+    
+    continue:
         MOV cx, coordenateXVideoMode
         MOV finalPosition, cx
         calculateBarNumberPosition
@@ -895,7 +907,7 @@ endm
 
 ;----------------CREAR REPORTE DE TOP 20 MAYORES PUNTUACIONES
 graphBarReport macro
-    LOCAL totalBarComparison, finishBarReport, continueBar
+    LOCAL totalBarComparison, finishBarReport, continueBar, Plot, notPlot, continue
     MOV bx, 0000h
     LEA si, usersAvailablePoints
     ADD si, 0009h
@@ -923,7 +935,19 @@ graphBarReport macro
         setBarColor numberForWrite
         MOV cx, coordenateXVideoMode
         MOV initialPosition, cx
+        CMP numberForWrite, 00h
+        JNE Plot
+        JMP notPlot
+    
+    Plot:
         plotBar colorBar, barWidth, barHeigth
+        JMP continue
+
+    notPlot:
+        MOV cx, barWidth
+        ADD coordenateXVideoMode, cx
+    
+    continue:
         MOV cx, coordenateXVideoMode
         MOV finalPosition, cx
         calculateBarNumberPosition
@@ -2261,7 +2285,7 @@ endm
 
 ;-------------------------GRAFICAR BARRAS DE TIEMPOS
 graphBarReportTimes macro array, barH
-    LOCAL totalBarComparison, finishBarReport, continueBar
+    LOCAL totalBarComparison, finishBarReport, continueBar, Plot, notPlot, continue
     MOV bx, 0000h
     LEA si, array
     MOV coordenateXVideoMode, 0012h
@@ -2286,7 +2310,19 @@ graphBarReportTimes macro array, barH
         setBarColor numberWord
         MOV cx, coordenateXVideoMode
         MOV initialPosition, cx
+        CMP numberWord, 0000h
+        JNE Plot
+        JMP notPlot
+    
+    Plot:
         plotBar colorBar, barWidth, barHeigth
+        JMP continue
+
+    notPlot:
+        MOV cx, barWidth
+        ADD coordenateXVideoMode, cx
+    
+    continue:
         MOV cx, coordenateXVideoMode
         MOV finalPosition, cx
         calculateBarNumberPosition
@@ -3533,17 +3569,27 @@ cleanVariablesOnVideo macro
 endm
 
 ;----------------IMPRMIR CABECERA DEL JUEGO
-printGameHeader macro
+printGameHeader macro time, nameL
     printGraphicMode username 00h 00h 0007h   ;IMPRIMIR EN MODO GRAFICO
     getInfoCursor   ;TRAER LA POSICION DEL CURSOR
     ADD dl, 05h
-    printGraphicMode nameLevel1 00h dl 0006h
+    printGraphicMode nameL 00h dl 0006h
     getInfoCursor
     ADD dl, 05h
     printGraphicMode punctuationMsg 00h dl 0002h
     getInfoCursor
     ADD dl, 08h
-    printGraphicMode timeGameMsg 00h dl 0005h 
+    moveCursor 00h dl
+    separate3DigitNumber time           ;SEPARAR EN CENTENA, DECENA Y UNIDAD EL TIEMPO
+    ADD hundredthNumber, 0030h
+    ADD tenthNUmber, 0030h
+    ADD unitNumber, 0030h
+    printCharacterVideoMode hundredthNumber         ;
+    printCharacterVideoMode tenthNUmber             ;   IMPRIMIR TIEMPO
+    printCharacterVideoMode unitNumber              ;
+    SUB hundredthNumber, 0030h
+    SUB tenthNUmber, 0030h
+    SUB unitNumber, 0030h
 endm
 
 ;----------------IMPRMIR MARCO DEL JUEGO
@@ -3637,4 +3683,23 @@ gameBreak macro
         JMP endUpSplitting
 
     exitMacro:
+endm
+
+clearUsernameMemory macro
+    LOCAL clear
+    PUSH si
+    PUSH cx
+    PUSH ax
+    LEA si, username
+    MOV cx, 0007h
+
+    clear:
+        MOV al, 20h
+        MOV [si], al
+        INC si
+        LOOP clear
+    
+    POP ax
+    POP cx
+    POP si
 endm
