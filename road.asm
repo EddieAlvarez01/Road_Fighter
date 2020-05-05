@@ -141,7 +141,7 @@ awardPointsLevel6 dw 0000
 colorLevel6 db 6 dup(" "), "$"
 
 nameFileLoad db 20 dup(0), "$"
-readGameLoad db 156 dup (" "), "$"
+readGameLoad db 228 dup (" "), "$"
 
 validDigits db 00
 
@@ -357,10 +357,17 @@ main proc
         JMP getTop10Times
 
     jumpPlay:
-        JMP playGame
+        JMP check
 
     jumpLoadFile:
         JMP loadFile
+    
+    check:
+        LEA si, nameLevel1
+        MOV al, [si]
+        CMP al, 00h
+        JNE playGame
+        JMP userMenu
 
     playGame:
         MOV iCart, 009Ah   ;CENTRAR
@@ -395,6 +402,13 @@ main proc
         detectCarMovement       ;VERIFICA SI SE PRESIONARON LAS FLECHAS PARA MOVER
         drawCart iCart jCart 0028h 0028h currentColor   ;DIBUJAR CARRO
         JMP launchLevel1
+
+    check2:
+        LEA si, nameLevel2
+        MOV al, [si]
+        CMP al, 00h
+        JNE preStartLevel2
+        JMP endUpSplitting
     
     preStartLevel2:
         updateCartColor colorLevel2
@@ -418,7 +432,7 @@ main proc
         MOV ax, currentTimeLevel
         CMP displayTime, ax
         JNE keepGoing2
-        JMP preStartLevel3
+        JMP check3
 
     keepGoing2:
         graphicMode
@@ -427,6 +441,13 @@ main proc
         detectCarMovement
         drawCart iCart jCart 0028h 0028h currentColor   ;DIBUJAR CARRO
         JMP launchLevel2
+
+    check3:
+        LEA si, nameLevel3
+        MOV al, [si]
+        CMP al, 00h
+        JNE preStartLevel3
+        JMP endUpSplitting
 
     preStartLevel3:
         updateCartColor colorLevel3
@@ -450,7 +471,7 @@ main proc
         MOV ax, currentTimeLevel
         CMP displayTime, ax
         JNE keepGoing3
-        JMP preStartLevel4
+        JMP check4
 
     keepGoing3:
         graphicMode
@@ -459,6 +480,13 @@ main proc
         detectCarMovement
         drawCart iCart jCart 0028h 0028h currentColor   ;DIBUJAR CARRO
         JMP launchLevel3
+
+    check4:
+        LEA si, nameLevel4
+        MOV al, [si]
+        CMP al, 00h
+        JNE preStartLevel4
+        JMP endUpSplitting
 
     preStartLevel4:
         updateCartColor colorLevel4
@@ -482,7 +510,7 @@ main proc
         MOV ax, currentTimeLevel
         CMP displayTime, ax
         JNE keepGoing4
-        JMP preStartLevel5
+        JMP check5
 
     keepGoing4:
         graphicMode
@@ -491,6 +519,13 @@ main proc
         detectCarMovement
         drawCart iCart jCart 0028h 0028h currentColor   ;DIBUJAR CARRO
         JMP launchLevel4
+
+    check5:
+        LEA si, nameLevel5
+        MOV al, [si]
+        CMP al, 00h
+        JNE preStartLevel5
+        JMP endUpSplitting
 
     preStartLevel5:
         updateCartColor colorLevel5
@@ -514,7 +549,7 @@ main proc
         MOV ax, currentTimeLevel
         CMP displayTime, ax
         JNE keepGoing5
-        JMP preStartLevel6
+        JMP check6
 
     keepGoing5:
         graphicMode
@@ -523,6 +558,13 @@ main proc
         detectCarMovement
         drawCart iCart jCart 0028h 0028h currentColor   ;DIBUJAR CARRO
         JMP launchLevel5
+
+    check6:
+        LEA si, nameLevel6
+        MOV al, [si]
+        CMP al, 00h
+        JNE preStartLevel6
+        JMP endUpSplitting
     
     preStartLevel6:
         updateCartColor colorLevel6
@@ -568,8 +610,50 @@ main proc
         readChain 0014h nameFileLoad    ;LEER UNA CADENA PARA EL NOMBRE DEL ARCHIVO A CARGAR
         chainClean 0014h nameFileLoad   ;LIMPIAR LA CADENA LEIDA DE LOS SALTOS DE LINEA Y RETORNOS DE CARRO
         openFile nameFileLoad 00h       ;ABRIMOS EL ARCHIVO
-        readFile 009Ch readGameLoad     ;LEER EL CONTENIDO
+        readFile 00E4h readGameLoad     ;LEER EL CONTENIDO
         closeFile         ;CERRAR EL ARCHIVO
+        variableCleaner 0006h nameLevel1 00h
+        variableCleaner 0006h nameLevel2 00h
+        variableCleaner 0006h nameLevel3 00h
+        variableCleaner 0006h nameLevel4 00h
+        variableCleaner 0006h nameLevel5 00h
+        variableCleaner 0006h nameLevel6 00h
+        variableCleaner 0006h colorLevel1 20h
+        variableCleaner 0006h colorLevel2 20h
+        variableCleaner 0006h colorLevel3 20h
+        variableCleaner 0006h colorLevel4 20h
+        variableCleaner 0006h colorLevel5 20h
+        variableCleaner 0006h colorLevel6 20h
+        MOV timeLevel1, 0000h
+        MOV timeLevel2, 0000h
+        MOV timeLevel3, 0000h
+        MOV timeLevel4, 0000h
+        MOV timeLevel5, 0000h
+        MOV timeLevel6, 0000h
+        MOV obstacleTimeLevel1, 0000h
+        MOV obstacleTimeLevel2, 0000h
+        MOV obstacleTimeLevel3, 0000h
+        MOV obstacleTimeLevel4, 0000h
+        MOV obstacleTimeLevel5, 0000h
+        MOV obstacleTimeLevel6, 0000h
+        MOV awardTimeLevel1, 0000h
+        MOV awardTimeLevel2, 0000h
+        MOV awardTimeLevel3, 0000h
+        MOV awardTimeLevel4, 0000h
+        MOV awardTimeLevel5, 0000h
+        MOV awardTimeLevel6, 0000h
+        MOV obstaclePointsLevel1, 0000h
+        MOV obstaclePointsLevel2, 0000h
+        MOV obstaclePointsLevel3, 0000h
+        MOV obstaclePointsLevel4, 0000h
+        MOV obstaclePointsLevel5, 0000h
+        MOV obstaclePointsLevel6, 0000h
+        MOV awardPointsLevel1, 0000h
+        MOV awardPointsLevel2, 0000h
+        MOV awardPointsLevel3, 0000h
+        MOV awardPointsLevel4, 0000h
+        MOV awardPointsLevel5, 0000h
+        MOV awardPointsLevel6, 0000h
         loadLevels        ;DEL STRING LEIDO CARGAR A LOS RESPECTIVOS NIVELES
         print fileMessageReadSuccessfully
         JMP userMenu

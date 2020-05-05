@@ -2866,6 +2866,13 @@ loadLevels macro
     MOV ch, 01h        ;CONTADOR DE NIVELES, 1 NIVEL POR LINEA
     LEA si, readGameLoad
 
+    vacuumCheck:
+        ADD si, 0006h
+        MOV al, [si]
+        CMP al, 20h
+        JNE nameLevel
+        JMP exitMacro
+
     nameLevel:              ;COMPARACION DE EN QUE LINEA SE ENCUENTRA PARA ASIGNAR A UNA VARIABLE
         CMP ch, 01h
         JE pointNamelvl1
@@ -3472,12 +3479,26 @@ loadLevels macro
         JMP colourCycle
     
     newLevel:
+        INC si
         CMP ch, 06h
         JE exitMacro
         INC ch
+    
+    ccy:
+        MOV al, [si]
+        CMP al, 0Ah
+        JE cyy1
+        CMP al, 0Dh
+        JE cyy1
+        JMP continue1
+
+    cyy1:
         INC si
+        JMP ccy
+    
+    continue1:
         MOV cl, 00h
-        JMP nameLevel
+        JMP vacuumCheck
     
     exitMacro:
 endm
@@ -3603,7 +3624,7 @@ endm
 
 ;-------------------MACRO PARA MOVER EL CARRO SI USA LAS FECHAS
 detectCarMovement macro
-    LOCAL moveRight, moveLeft, exitMacro
+    LOCAL moveRight, moveLeft, exitMacro, pausess
     getKeyAsynchronous  ;LEER TECLA
     JZ exitMacro        ;SI LA BANDERA 0 ESTA ACTIVA NO HAY TECLA PRESIONADA
     getKey
@@ -3612,8 +3633,11 @@ detectCarMovement macro
     CMP ah, 4Bh
     JE moveLeft
     CMP ah, 01h
-    gameBreak           ;EJECUTA LA PAUSA
+    JE pausess
     JMP exitMacro
+
+    pausess:
+        gameBreak   ;EJECUTA LA PAUSA
 
     moveRight:
         CMP jCart, 010Ah
@@ -3702,4 +3726,23 @@ clearUsernameMemory macro
     POP ax
     POP cx
     POP si
+endm
+
+;--------LIMPIADOR DE VARIABLES GENERICO
+variableCleaner macro length, var, asci
+    LOCAL clean
+    PUSH si
+    PUSH cx
+    PUSH ax
+    LEA si, var
+    MOV cx, length
+
+    clean:
+        MOV al, asci
+        MOV [si], al
+        INC si
+        LOOP clean
+        POP ax
+        POP cx
+        POP si
 endm
