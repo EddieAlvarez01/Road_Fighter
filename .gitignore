@@ -1,0 +1,18 @@
+#Objetos
+*.OBJ
+*.obj
+
+#Archivos de carga
+*.ply
+
+#ARCHIVOS DE REPORTES
+*.REP
+*.rep
+
+#ARCHIVO DE BD
+*.TXT
+*.txt
+
+#EXES
+*.EXE
+*.exe

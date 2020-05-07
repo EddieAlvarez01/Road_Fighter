@@ -141,7 +141,7 @@ awardPointsLevel6 dw 0000
 colorLevel6 db 6 dup(" "), "$"
 
 nameFileLoad db 20 dup(0), "$"
-readGameLoad db 228 dup (" "), "$"
+readGameLoad db 234 dup (" "), "$"
 
 validDigits db 00
 
@@ -610,7 +610,7 @@ main proc
         readChain 0014h nameFileLoad    ;LEER UNA CADENA PARA EL NOMBRE DEL ARCHIVO A CARGAR
         chainClean 0014h nameFileLoad   ;LIMPIAR LA CADENA LEIDA DE LOS SALTOS DE LINEA Y RETORNOS DE CARRO
         openFile nameFileLoad 00h       ;ABRIMOS EL ARCHIVO
-        readFile 00E4h readGameLoad     ;LEER EL CONTENIDO
+        readFile 00EAh readGameLoad     ;LEER EL CONTENIDO
         closeFile         ;CERRAR EL ARCHIVO
         variableCleaner 0006h nameLevel1 00h
         variableCleaner 0006h nameLevel2 00h
